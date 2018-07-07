@@ -13,7 +13,7 @@ import devpipeline_core.resolve
 import devpipeline_core.version
 
 
-class GenericTool(object):
+class Command(object):
 
     """This is the base class for tools that can be used by dev-pipeline.
 
@@ -50,38 +50,33 @@ class GenericTool(object):
         pass
 
 
-class TargetTool(GenericTool):
+class TargetCommand(Command):
 
     """A devpipeline tool that executes a list of tasks against a list of targets"""
 
-    def __init__(self, tasks=None, executors=True, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.add_argument("targets", nargs="*",
                           help="The targets to operate on")
-        self.tasks = tasks
-        if executors:
-            self.add_argument("--executor",
-                              help="The amount of verbosity to use.  Options "
-                                   "are \"quiet\" (print no extra "
-                                   "information), \"verbose\" (print "
-                                   "additional information), \"dry-run\" "
-                                   "(print commands to execute, but don't run"
-                                   " them), and \"silent\" (print nothing).  "
-                                   "Regardless of this option, errors are "
-                                   "always printed.",
-                              default="quiet")
-            self.verbosity = True
-            self.executor = None
-            self.components = None
-            self.targets = None
-        else:
-            self.verbosity = False
+        self.executor = None
+        self.components = None
+        self.targets = None
+        self.verbosity = False
         self.resolver = None
 
-    def add_dependency_resolution(self):
+    def enable_dependency_resolution(self):
         self.add_argument("--dependencies",
                           help="Control how build dependencies are handled.",
                           default="deep")
+
+    def enable_executors(self):
+        self.add_argument("--executor",
+                          help="The method to execute commands.",
+                          default="quiet")
+        self.verbosity = True
+
+    def set_tasks(self, tasks):
+        self.tasks = tasks
 
     def execute(self, *args, **kwargs):
         parsed_args = self.parser.parse_args(*args, **kwargs)
@@ -135,12 +130,23 @@ class TargetTool(GenericTool):
             self.executor.message("")
 
 
-def execute_tool(tool, args):
-    """Runs the provided tool with the given args. Exceptions are propogated to the caller"""
+def make_command(tasks, *args, **kwargs):
+    command = TargetCommand(*args, **kwargs)
+    command.enable_dependency_resolution()
+    command.enable_executors()
+    command.set_tasks(tasks)
+    return command
+
+
+def execute_command(command, args):
+    """
+    Runs the provided command with the given args.  Exceptions are propogated
+    to the caller.
+    """
     if args is None:
         args = sys.argv[1:]
     try:
-        tool.execute(args)
+        command.execute(args)
 
     except IOError as failure:
         if failure.errno == errno.EPIPE:
