@@ -16,6 +16,12 @@ setup(
             "quiet = devpipeline_core.executor:QuietExecutor",
             "silent = devpipeline_core.executor:SilentExecutor",
             "verbose = devpipeline_core.executor:VerboseExecutor"
+        ],
+
+        'devpipeline.resolvers': [
+            "deep = devpipeline_core.resolve:process_dependencies",
+            "none = devpipeline_core.resolve:process_none",
+            "reverse = devpipeline_core.resolve:process_reverse"
         ]
     },
 

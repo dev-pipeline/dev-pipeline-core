@@ -106,6 +106,28 @@ def process_dependencies(targets, components, resolved_fn):
             del counts[target]
 
 
+def process_reverse(targets, components, resolved_fn):
+    reverse_deps = _build_dep_data(components.sections(), components)[1]
+    visited_targets = {}
+
+    required_targets = targets.copy()
+    while required_targets:
+        current_target = required_targets.pop(0)
+        if current_target not in visited_targets:
+            visited_targets[current_target] = None
+        else:
+            # figure out how to present the circular targets
+            raise CircularDependencyException([current_target])
+        for rd in reverse_deps.get(current_target, []):
+            if rd not in required_targets:
+                required_targets.append(rd)
+        resolved_fn([current_target])
+
+
+def process_none(targets, components, resolved_fn):
+    resolved_fn(targets)
+
+
 def order_dependencies(targets, components):
     target_build_order = []
 

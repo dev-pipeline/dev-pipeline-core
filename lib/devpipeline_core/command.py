@@ -76,6 +76,12 @@ class TargetTool(GenericTool):
             self.targets = None
         else:
             self.verbosity = False
+        self.resolver = None
+
+    def add_dependency_resolution(self):
+        self.add_argument("--dependencies",
+                          help="Control how build dependencies are handled.",
+                          default="deep")
 
     def execute(self, *args, **kwargs):
         parsed_args = self.parser.parse_args(*args, **kwargs)
@@ -84,6 +90,7 @@ class TargetTool(GenericTool):
         if parsed_args.targets:
             self.targets = parsed_args.targets
         else:
+            parsed_args.dependencies = "deep"
             self.targets = self.components.sections()
         self.setup(parsed_args)
         if self.verbosity:
@@ -93,11 +100,20 @@ class TargetTool(GenericTool):
                     "{} isn't a valid executor".format(parsed_args.executor))
             else:
                 self.executor = helper_fn()
+        if "dependencies" not in parsed_args:
+            parsed_args.dependencies = "deep"
+        self.resolver = devpipeline_core.DEPENDENCY_RESOLVERS.get(parsed_args.dependencies)
         self.process()
 
     def process(self):
-        build_order = devpipeline_core.resolve.order_dependencies(
-            self.targets, self.components)
+        build_order = []
+
+        def _listify(resolved_components):
+            nonlocal build_order
+
+            build_order += resolved_components
+
+        self.resolver(self.targets, self.components, _listify)
         self.process_targets(build_order)
 
     def process_targets(self, build_order):
