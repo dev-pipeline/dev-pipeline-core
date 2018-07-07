@@ -2,11 +2,6 @@
 
 """The main module for devpipeline"""
 
-import devpipeline_core.executor
+import devpipeline_core.plugin
 
-EXECUTOR_TYPES = {
-    "dry-run": devpipeline_core.executor.DryRunExecutor,
-    "quiet": devpipeline_core.executor.QuietExecutor,
-    "silent": devpipeline_core.executor.SilentExecutor,
-    "verbose": devpipeline_core.executor.VerboseExecutor
-}
+EXECUTOR_TYPES = devpipeline_core.plugin.query_plugins('devpipeline.executors')

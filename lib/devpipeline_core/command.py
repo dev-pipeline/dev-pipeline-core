@@ -9,7 +9,6 @@ import sys
 
 import devpipeline_core.config.config
 import devpipeline_core.config.env
-import devpipeline_core.executor
 import devpipeline_core.resolve
 import devpipeline_core.version
 

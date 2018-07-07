@@ -10,6 +10,15 @@ setup(
     },
     packages=find_packages("lib"),
 
+    entry_points={
+        'devpipeline.executors': [
+            "dry-run = devpipeline_core.executor:DryRunExecutor",
+            "quiet = devpipeline_core.executor:QuietExecutor",
+            "silent = devpipeline_core.executor:SilentExecutor",
+            "verbose = devpipeline_core.executor:VerboseExecutor"
+        ]
+    },
+
     author="Stephen Newell",
     description="Core libraries for dev-pipeline",
     license="BSD-2"
