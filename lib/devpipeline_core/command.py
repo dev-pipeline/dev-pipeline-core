@@ -56,7 +56,7 @@ class TargetCommand(Command):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.add_argument("targets", nargs="*",
+        self.add_argument("targets", nargs="*", default=argparse.SUPPRESS,
                           help="The targets to operate on")
         self.executor = None
         self.components = None
@@ -82,7 +82,7 @@ class TargetCommand(Command):
         parsed_args = self.parser.parse_args(*args, **kwargs)
 
         self.components = devpipeline_core.config.config.update_cache()
-        if parsed_args.targets:
+        if "targets" in parsed_args:
             self.targets = parsed_args.targets
         else:
             parsed_args.dependencies = "deep"
