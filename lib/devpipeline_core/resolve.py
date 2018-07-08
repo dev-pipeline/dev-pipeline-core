@@ -68,7 +68,7 @@ def _build_dep_data(targets, components):
     return (counts, reverse_deps)
 
 
-def _process_dependencies(targets, components, resolved_fn):
+def process_dependencies(targets, components, resolved_fn):
     """
     Given a list of targets and component configurations, return a list of
     targets in build order. The list order guarantees every target's
@@ -112,7 +112,7 @@ def _process_dependencies(targets, components, resolved_fn):
 
 
 _DEEP_RESOLVER = (
-    _process_dependencies,
+    process_dependencies,
     "A resolver that includes the entire dependency tree for every target.")
 
 
@@ -168,5 +168,5 @@ def order_dependencies(targets, components):
 
         target_build_order += resolved_targets
 
-    _process_dependencies(targets, components, _append_targets)
+    process_dependencies(targets, components, _append_targets)
     return target_build_order
