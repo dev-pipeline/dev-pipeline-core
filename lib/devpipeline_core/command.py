@@ -14,9 +14,10 @@ import devpipeline_core.version
 
 
 def _print_resolvers():
-    for dr in sorted(devpipeline_core.DEPENDENCY_RESOLVERS):
-        print("{} - {}".format(dr,
-                               devpipeline_core.DEPENDENCY_RESOLVERS[dr][1]))
+    for dependency_resolver in sorted(devpipeline_core.DEPENDENCY_RESOLVERS):
+        print("{} - {}".format(
+            dependency_resolver,
+            devpipeline_core.DEPENDENCY_RESOLVERS[dependency_resolver][1]))
 
 
 def _print_executors():
@@ -39,12 +40,22 @@ class Command(object):
             *args, **kwargs)
 
     def add_argument(self, *args, **kwargs):
-        """Subclasses inject additional cli arguments to parse by calling this function"""
+        """
+        Subclasses inject additional cli arguments to parse by calling this
+        function.
+        """
         self.parser.add_argument(*args, **kwargs)
 
     def set_version(self, version):
+        """
+        Add the --version string with appropriate output.
+
+        Arguments:
+        version - the version of whatever provides the command
+        """
         self.parser.add_argument("--version", action="version",
-                                 version="%(prog)s {}".format(
+                                 version="%(prog)s {} (core {})".format(
+                                     version,
                                      devpipeline_core.version.STRING))
 
     def execute(self, *args, **kwargs):
@@ -75,8 +86,15 @@ class TargetCommand(Command):
         self.targets = None
         self.verbosity = False
         self.resolver = None
+        self.tasks = None
 
     def enable_dependency_resolution(self):
+        """
+        Enable customizable dependency resolution for this Command.
+
+        This will add the --dependencies and --list-dependency-resolvers
+        command line arguments.
+        """
         self.add_argument("--dependencies",
                           help="Control how build dependencies are handled.",
                           default="deep")
@@ -85,6 +103,12 @@ class TargetCommand(Command):
                           help="List the dependency resolution methods.")
 
     def enable_executors(self):
+        """
+        Enable customizable executors for this Command.
+
+        This will add the --executor and --list-executors command line
+        arguments.
+        """
         self.add_argument("--executor",
                           help="The method to execute commands.",
                           default="quiet")
@@ -94,6 +118,13 @@ class TargetCommand(Command):
         self.verbosity = True
 
     def set_tasks(self, tasks):
+        """
+        Set the TargetCommand's tasks.
+
+        Arguments:
+        tasks - The tasks to execute.  This should be a list of functions that
+                take a target configuration.
+        """
         self.tasks = tasks
 
     def execute(self, *args, **kwargs):
@@ -125,7 +156,7 @@ class TargetCommand(Command):
             parsed_args.dependencies)
         if resolver:
             self.resolver = resolver[0]
-        self.process()
+        return self.process()
 
     def process(self):
         build_order = []
@@ -158,6 +189,17 @@ class TargetCommand(Command):
 
 
 def make_command(tasks, *args, **kwargs):
+    """
+    Create a TargetCommand with defined tasks.
+
+    This is a helper function to avoid boiletplate when dealing with simple
+    cases (e.g., all cli arguments can be handled by TargetCommand), with no
+    special processing.  In general, this means a command only needs to run
+    established tasks.
+
+    Arguments:
+    tasks - the tasks to execute
+    """
     command = TargetCommand(*args, **kwargs)
     command.enable_dependency_resolution()
     command.enable_executors()

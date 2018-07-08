@@ -3,11 +3,16 @@
 
 
 class CircularDependencyException(Exception):
+    """
+    An exception that's thrown when dependencies contain a circular dependency.
+    """
+
     def __init__(self, circular_components):
+        super().__init__()
         self.components = circular_components
 
     def __str__(self):
-        return "Circular dependency: {}".format(self._components)
+        return "Circular dependency: {}".format(self.components)
 
 
 def _build_dep_data(targets, components):
@@ -123,9 +128,9 @@ def _process_reverse(targets, components, resolved_fn):
         else:
             # figure out how to present the circular targets
             raise CircularDependencyException([current_target])
-        for rd in reverse_deps.get(current_target, []):
-            if rd not in required_targets:
-                required_targets.append(rd)
+        for reverse_dep in reverse_deps.get(current_target, []):
+            if reverse_dep not in required_targets:
+                required_targets.append(reverse_dep)
         resolved_fn([current_target])
 
 
@@ -135,6 +140,9 @@ _REVERSE_RESOLVER = (
 
 
 def _process_none(targets, components, resolved_fn):
+    # Unused arguments
+    del components
+
     resolved_fn(targets)
 
 
@@ -144,6 +152,15 @@ _NONE_RESOLVER = (
 
 
 def order_dependencies(targets, components):
+    """
+    Return a list of targets, with all dependencies, in a build-dependant
+    order.  This is effectively the deep resolver, before resolvers were
+    customizable.
+
+    Arguments:
+    targets - the requested targets to build
+    components - the full configuration
+    """
     target_build_order = []
 
     def _append_targets(resolved_targets):
