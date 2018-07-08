@@ -67,7 +67,7 @@ def read_overrides(base_dir, name, override_list):
     ret = []
     for override in override_list:
         path = devpipeline_core.config.paths.get_override_path(base_dir, override,
-                                                          name)
+                                                               name)
         if os.path.isfile(path):
             ret.append((override,
                         devpipeline_core.config.parser.read_config(path)))

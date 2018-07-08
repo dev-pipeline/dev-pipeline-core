@@ -40,6 +40,12 @@ class QuietExecutor(_ExecutorBase):
         pass
 
 
+_QUIET_EXECUTOR = (
+    QuietExecutor,
+    "An executor that prints no additional information.  Information pinted by"
+    " any executed tools will be printed without modification.")
+
+
 class SilentExecutor(_ExecutorBase):
 
     """This executor class runs and logs nothing except errors."""
@@ -55,6 +61,12 @@ class SilentExecutor(_ExecutorBase):
                 self._execute_single(environment, **cmd)
 
 
+_SILENT_EXECUTOR = (
+    SilentExecutor,
+    "An executor that removes all standard output.  Anything printed to "
+    "standard error will still be emitted.")
+
+
 class VerboseExecutor(_ExecutorBase):
 
     """This executor class logs verbosely."""
@@ -66,6 +78,11 @@ class VerboseExecutor(_ExecutorBase):
             self._execute_single(environment, **cmd)
 
 
+_VERBOSE_EXECUTOR = (
+    VerboseExecutor,
+    "An executor that prints lots of extra information.")
+
+
 class DryRunExecutor(_ExecutorBase):
 
     """This executor class outputs the commands that would have been run but
@@ -75,3 +92,9 @@ class DryRunExecutor(_ExecutorBase):
         for cmd in args:
             cmd_args = cmd.get("args")
             self.message("\tExecuting: {}".format(cmd_args))
+
+
+_DRYRUN_EXECUTOR = (
+    DryRunExecutor,
+    "An executor that prints what it would do, but doesn't execute anthing.  "
+    "This is useful for debugging a configuration.")

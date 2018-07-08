@@ -57,5 +57,6 @@ def apply_profiles(target_config, config_map, found_fn):
             config_map["profile_config"] = read_profiles(
                 devpipeline_core.config.paths.get_profile_path(config_map=config_map))
         apply_all_profiles(config_map["profile_config"],
-                           devpipeline_core.config.config.split_list(profile_list),
+                           devpipeline_core.config.config.split_list(
+                               profile_list),
                            found_fn)

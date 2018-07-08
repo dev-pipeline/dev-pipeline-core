@@ -31,7 +31,7 @@ class TestConfigProfile(unittest.TestCase):
             raise Exception("Shouldn't have been called")
 
         count = devpipeline_core.config.profile.apply_all_profiles(_PROFILE_CONFIG,
-                                                              [], _dont_call)
+                                                                   [], _dont_call)
         self.assertEqual(0, count)
 
     def test_single(self):

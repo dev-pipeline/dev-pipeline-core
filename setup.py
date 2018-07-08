@@ -12,16 +12,16 @@ setup(
 
     entry_points={
         'devpipeline.executors': [
-            "dry-run = devpipeline_core.executor:DryRunExecutor",
-            "quiet = devpipeline_core.executor:QuietExecutor",
-            "silent = devpipeline_core.executor:SilentExecutor",
-            "verbose = devpipeline_core.executor:VerboseExecutor"
+            "dry-run = devpipeline_core.executor:_DRYRUN_EXECUTOR",
+            "quiet = devpipeline_core.executor:_QUIET_EXECUTOR",
+            "silent = devpipeline_core.executor:_SILENT_EXECUTOR",
+            "verbose = devpipeline_core.executor:_VERBOSE_EXECUTOR"
         ],
 
         'devpipeline.resolvers': [
-            "deep = devpipeline_core.resolve:process_dependencies",
-            "none = devpipeline_core.resolve:process_none",
-            "reverse = devpipeline_core.resolve:process_reverse"
+            "deep = devpipeline_core.resolve:_DEEP_RESOLVER",
+            "none = devpipeline_core.resolve:_NONE_RESOLVER",
+            "reverse = devpipeline_core.resolve:_REVERSE_RESOLVER"
         ]
     },
 
