@@ -34,7 +34,7 @@ def tool_builder(component, key, tool_map, *args):
     if tool_name:
         tool_fn = tool_map.get(tool_name)
         if tool_fn:
-            return tool_fn(*args)
+            return tool_fn[0](*args)
         else:
             raise Exception(
                 "Unknown {} '{}' for {}".format(
