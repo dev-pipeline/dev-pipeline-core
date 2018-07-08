@@ -4,7 +4,7 @@
 
 class CircularDependencyException(Exception):
     def __init__(self, circular_components):
-        self._components = circular_components
+        self.components = circular_components
 
     def __str__(self):
         return "Circular dependency: {}".format(self._components)
