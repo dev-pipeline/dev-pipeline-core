@@ -2,6 +2,9 @@
 
 from setuptools import setup, find_packages
 
+with open('README.rst') as f:
+    long_description = f.read()
+
 setup(
     name="dev-pipeline-core",
     version="0.2.0",
@@ -27,5 +30,16 @@ setup(
 
     author="Stephen Newell",
     description="Core libraries for dev-pipeline",
-    license="BSD-2"
+    long_description=long_description,
+    long_description_content_type='text/x-rst',
+    license="BSD-2",
+    url="https://github.com/dev-pipeline/dev-pipeline-core",
+    classifiers=[
+        "Development Status :: 2 - Pre-Alpha",
+        "Framework :: dev-pipeline",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: BSD License",
+        "Topic :: Software Development",
+        "Topic :: Utilities"
+    ]
 )
