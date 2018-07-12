@@ -36,7 +36,6 @@ setup(
     url="https://github.com/dev-pipeline/dev-pipeline-core",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
-        "Framework :: dev-pipeline",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: BSD License",
         "Topic :: Software Development",
