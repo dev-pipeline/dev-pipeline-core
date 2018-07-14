@@ -82,7 +82,7 @@ def _create_cache(raw_path, cache_dir, cache_file):
         }
         if not os.path.isabs(cache_dir):
             root_state["dp.build_root"] = "{}/{}".format(
-                os.path.dirname(abs_path), cache_dir)
+                os.getcwd(), cache_dir)
         else:
             root_state["dp.build_root"] = cache_dir
         _add_default_options(config, root_state)
