@@ -4,7 +4,7 @@
 
 import os.path
 
-_DEFAULT_PATH = "{}/.dev-pipeline.d".format(os.path.expanduser("~"))
+_DEFAULT_PATH = os.path.join(os.path.expanduser("~"), ".dev-pipeline.d")
 
 
 def _get_config_dir():
@@ -17,7 +17,7 @@ def _get_config_dir():
 def _make_path(base_dir, ending):
     if not base_dir:
         base_dir = _get_config_dir()
-    return "{}/{}".format(base_dir, ending)
+    return os.path.join(base_dir, ending)
 
 
 def _override_base_dir(config_map):
@@ -51,7 +51,8 @@ def get_override_path(base_dir, override_name, package_name):
     override_name - The name of the override being considered.
     package_name - The package being considered.
     """
-    return "{}/{}/{}.conf".format(base_dir, override_name, package_name)
+    return os.path.join(base_dir, override_name,
+                        "{}.conf".format(package_name))
 
 
 def get_profile_path(base_dir=None, config_map=None):

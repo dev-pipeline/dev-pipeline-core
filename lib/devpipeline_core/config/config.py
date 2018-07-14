@@ -50,11 +50,11 @@ def _make_src_dir(config, package_name):
             return src_path
     if not src_path:
         src_path = package_name
-    return "{}/{}".format(config.get("dp.src_root"), src_path)
+    return os.path.join(config.get("dp.src_root"), src_path)
 
 
 _PACKAGE_OPTIONS = {
-    "dp.build_dir": lambda config, package_name: "{}/{}".format(
+    "dp.build_dir": lambda config, package_name: os.path.join(
         config.get("dp.build_root"), package_name),
     "dp.src_dir": _make_src_dir
 }
@@ -80,11 +80,7 @@ def _create_cache(raw_path, cache_dir, cache_file):
             "dp.src_root": os.path.dirname(abs_path),
             "dp.version": format(devpipeline_core.version.ID, "02x")
         }
-        if not os.path.isabs(cache_dir):
-            root_state["dp.build_root"] = "{}/{}".format(
-                os.getcwd(), cache_dir)
-        else:
-            root_state["dp.build_root"] = cache_dir
+        root_state["dp.build_root"] = os.path.join(os.getcwd(), cache_dir)
         _add_default_options(config, root_state)
         _add_package_options_all(config, root_state)
         return config
@@ -95,7 +91,7 @@ def _create_cache(raw_path, cache_dir, cache_file):
 def _write_config(config, cache_dir, cache_file):
     if not os.path.isdir(cache_dir):
         os.makedirs(cache_dir)
-    with open("{}/{}".format(cache_dir, cache_file), 'w') as output_file:
+    with open(os.path.join(cache_dir, cache_file), 'w') as output_file:
         config.write(output_file)
 
 
@@ -137,7 +133,7 @@ def find_config():
     previous = ""
     current = os.getcwd()
     while previous != current:
-        check_path = "{}/build.cache".format(current)
+        check_path = os.path.join(current, "build.cache")
         if os.path.isfile(check_path):
             return check_path
         else:
