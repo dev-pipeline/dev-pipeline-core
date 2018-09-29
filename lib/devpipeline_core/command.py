@@ -58,7 +58,7 @@ class Command(object):
                                      version,
                                      devpipeline_core.version.STRING))
 
-    def execute(self, config_fn, *args, **kwargs):
+    def execute(self, *args, **kwargs):
         """Initializes and runs the tool"""
         args = self.parser.parse_args(*args, **kwargs)
         self.setup(args)
@@ -77,7 +77,8 @@ class TargetCommand(Command):
 
     """A devpipeline tool that executes a list of tasks against a list of targets"""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, config_fn=devpipeline_core.config.config.update_cache,
+                 *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.add_argument("targets", nargs="*", default=argparse.SUPPRESS,
                           help="The targets to operate on")
@@ -87,6 +88,7 @@ class TargetCommand(Command):
         self.verbosity = False
         self.resolver = None
         self.tasks = None
+        self._config_fn = config_fn
 
     def enable_dependency_resolution(self):
         """
@@ -127,7 +129,7 @@ class TargetCommand(Command):
         """
         self.tasks = tasks
 
-    def execute(self, config_fn, *args, **kwargs):
+    def execute(self, *args, **kwargs):
         parsed_args = self.parser.parse_args(*args, **kwargs)
 
         if "list_dependency_resolvers" in parsed_args:
@@ -135,7 +137,7 @@ class TargetCommand(Command):
         elif "list_executors" in parsed_args:
             return _print_executors()
 
-        self.components = config_fn()
+        self.components = self._config_fn()
         if "targets" in parsed_args:
             self.targets = parsed_args.targets
         else:
@@ -207,8 +209,7 @@ def make_command(tasks, *args, **kwargs):
     return command
 
 
-def execute_command(command, args,
-                    config_fn=devpipeline_core.config.config.update_cache):
+def execute_command(command, args):
     """
     Runs the provided command with the given args.  Exceptions are propogated
     to the caller.
@@ -216,7 +217,7 @@ def execute_command(command, args,
     if args is None:
         args = sys.argv[1:]
     try:
-        command.execute(config_fn, args)
+        command.execute(args)
 
     except IOError as failure:
         if failure.errno == errno.EPIPE:
