@@ -127,7 +127,7 @@ class TargetCommand(Command):
         """
         self.tasks = tasks
 
-    def execute(self, *args, **kwargs):
+    def execute(self, config_fn, *args, **kwargs):
         parsed_args = self.parser.parse_args(*args, **kwargs)
 
         if "list_dependency_resolvers" in parsed_args:
@@ -135,7 +135,7 @@ class TargetCommand(Command):
         elif "list_executors" in parsed_args:
             return _print_executors()
 
-        self.components = devpipeline_core.config.config.update_cache()
+        self.components = config_fn()
         if "targets" in parsed_args:
             self.targets = parsed_args.targets
         else:
@@ -207,7 +207,8 @@ def make_command(tasks, *args, **kwargs):
     return command
 
 
-def execute_command(command, args):
+def execute_command(command, args,
+                    config_fn=devpipeline_core.config.config.update_cache):
     """
     Runs the provided command with the given args.  Exceptions are propogated
     to the caller.
@@ -215,7 +216,7 @@ def execute_command(command, args):
     if args is None:
         args = sys.argv[1:]
     try:
-        command.execute(args)
+        command.execute(config_fn, args)
 
     except IOError as failure:
         if failure.errno == errno.EPIPE:
