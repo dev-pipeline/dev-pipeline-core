@@ -7,7 +7,6 @@ import argparse
 import errno
 import sys
 
-import devpipeline_core.config.config
 import devpipeline_core.config.env
 import devpipeline_core.resolve
 import devpipeline_core.version
@@ -77,7 +76,7 @@ class TargetCommand(Command):
 
     """A devpipeline tool that executes a list of tasks against a list of targets"""
 
-    def __init__(self, config_fn=devpipeline_core.config.config.update_cache,
+    def __init__(self, config_fn,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.add_argument("targets", nargs="*", default=argparse.SUPPRESS,

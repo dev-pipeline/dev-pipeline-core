@@ -2,7 +2,6 @@
 
 """Support modification of option values."""
 
-import devpipeline_core.config.config
 import devpipeline_core.config.override
 import devpipeline_core.config.parser
 import devpipeline_core.config.paths
