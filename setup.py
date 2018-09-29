@@ -7,7 +7,7 @@ with open('README.rst') as f:
 
 setup(
     name="dev-pipeline-core",
-    version="0.2.0",
+    version="0.3.0",
     package_dir={
         "": "lib"
     },
