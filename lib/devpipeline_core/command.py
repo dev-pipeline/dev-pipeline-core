@@ -58,7 +58,7 @@ class Command(object):
                                      version,
                                      devpipeline_core.version.STRING))
 
-    def execute(self, *args, **kwargs):
+    def execute(self, config_fn, *args, **kwargs):
         """Initializes and runs the tool"""
         args = self.parser.parse_args(*args, **kwargs)
         self.setup(args)
