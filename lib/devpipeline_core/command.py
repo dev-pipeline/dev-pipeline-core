@@ -8,6 +8,7 @@ import errno
 import sys
 
 import devpipeline_core.config.env
+import devpipeline_core.config.sanitizer
 import devpipeline_core.resolve
 import devpipeline_core.version
 

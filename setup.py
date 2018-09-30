@@ -25,6 +25,10 @@ setup(
             "deep = devpipeline_core.resolve:_DEEP_RESOLVER",
             "none = devpipeline_core.resolve:_NONE_RESOLVER",
             "reverse = devpipeline_core.resolve:_REVERSE_RESOLVER"
+        ],
+
+        'devpipeline.config_sanitizers': [
+            "empty-depends = devpipeline_core.config.sanitizer:_sanitize_empty_depends"
         ]
     },
 
