@@ -27,6 +27,15 @@ class SimpleTool():
             self.executor.message("\t(Nothing to do)")
 
 
+class MissingToolKey(Exception):
+    def __init__(self, key, component):
+        self._key = key
+        self._component_name = component.name()
+
+    def __str__(self):
+        return "'{}' unspecified in {}".format(self._key, self._component_name)
+
+
 def tool_builder(component, key, tool_map, *args):
     """This helper function initializes a tool with the given args."""
     # pylint: disable=protected-access
@@ -38,9 +47,9 @@ def tool_builder(component, key, tool_map, *args):
         else:
             raise Exception(
                 "Unknown {} '{}' for {}".format(
-                    key, tool_name, component._name))
+                    key, tool_name, component.name()))
     else:
-        raise Exception("{} does not specify {}".format(component._name, key))
+        raise MissingToolKey(key, component)
 
 
 def args_builder(prefix, current_target, args_dict, value_found_fn):
