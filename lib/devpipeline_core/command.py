@@ -141,7 +141,7 @@ class TargetCommand(Command):
             self.targets = parsed_args.targets
         else:
             parsed_args.dependencies = "deep"
-            self.targets = self.components.sections()
+            self.targets = self.components.components()
         self.setup(parsed_args)
         if self.verbosity:
             helper_fn = devpipeline_core.EXECUTOR_TYPES.get(
@@ -180,7 +180,7 @@ class TargetCommand(Command):
             self.executor.message("-" * (4 + len(target)))
 
             config_info["current_target"] = target
-            config_info["current_config"] = self.components[target]
+            config_info["current_config"] = self.components.get(target)
             config_info[target] = {}
             config_info["env"] = devpipeline_core.config.env.create_environment(
                 config_info)

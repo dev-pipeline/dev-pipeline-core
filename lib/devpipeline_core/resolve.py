@@ -31,7 +31,7 @@ def _build_dep_data(targets, components):
                 reverse_deps[dependency] = []
             reverse_deps[dependency].append(package)
 
-    def get_deps_from_component(component):
+    def _get_deps_from_component(component):
         """
         Given a component, return a list of dependencies. An empty list will
         be returned for components with no dependencies.
@@ -51,7 +51,8 @@ def _build_dep_data(targets, components):
         current = to_be_processed.pop(0)
         if current in components:
             if current not in processed_targets:
-                component_deps = get_deps_from_component(components[current])
+                component_deps = _get_deps_from_component(
+                    components.get(current))
                 counts[current] = len(component_deps)
                 _add_reverse_deps(current, component_deps)
 
@@ -117,7 +118,7 @@ _DEEP_RESOLVER = (
 
 
 def _process_reverse(targets, components, resolved_fn):
-    reverse_deps = _build_dep_data(components.sections(), components)[1]
+    reverse_deps = _build_dep_data(components.components(), components)[1]
     visited_targets = {}
 
     required_targets = targets.copy()

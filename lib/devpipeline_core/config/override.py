@@ -74,10 +74,6 @@ def read_overrides(base_dir, name, override_list):
     return ret
 
 
-def _split_list(values, split_string):
-    return [value.strip() for value in values.split(',')]
-
-
 def apply_overrides(config, name, config_map, found_fn):
     """
     Apply all available overrides.
@@ -91,12 +87,11 @@ def apply_overrides(config, name, config_map, found_fn):
                take two arguments: the name of the loaded override, and the
                values provided by that override.
     """
-    override_list = config.get("dp.overrides")
+    override_list = config.get_list("dp.overrides")
     if override_list:
-        split_list = _split_list(override_list)
         if "overrides" not in config_map[name]:
             config_map[name]["overrides"] = read_overrides(
                 devpipeline_core.config.paths.get_overrides_root(
                     config_map=config_map),
-                name, split_list)
+                name, override_list)
         apply_all_overrides(config_map[name]["overrides"], found_fn)

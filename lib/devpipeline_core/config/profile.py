@@ -43,10 +43,6 @@ def read_profiles(path):
     raise Exception("Unable to load profile file ({})".format(path))
 
 
-def _split_list(values, split_string):
-    return [value.strip() for value in values.split(',')]
-
-
 def apply_profiles(target_config, config_map, found_fn):
     """
     Apply profiles values during option modification.
@@ -55,11 +51,10 @@ def apply_profiles(target_config, config_map, found_fn):
     config -- a package configuration
     found_fn -- a function to call after loading a profile
     """
-    profile_list = target_config.get("dp.profile_name")
+    profile_list = target_config.get_list("dp.profile_name")
     if profile_list:
         if "profile_config" not in config_map:
             config_map["profile_config"] = read_profiles(
                 devpipeline_core.config.paths.get_profile_path(config_map=config_map))
         apply_all_profiles(config_map["profile_config"],
-                           _split_list(profile_list),
-                           found_fn)
+                           profile_list, found_fn)
