@@ -176,18 +176,21 @@ class TargetCommand(Command):
         config_info = {
             "executor": self.executor
         }
-        for target in build_order:
-            self.executor.message("  {}".format(target))
-            self.executor.message("-" * (4 + len(target)))
+        try:
+            for target in build_order:
+                self.executor.message("  {}".format(target))
+                self.executor.message("-" * (4 + len(target)))
 
-            config_info["current_target"] = target
-            config_info["current_config"] = self.components.get(target)
-            config_info[target] = {}
-            config_info["env"] = devpipeline_core.config.env.create_environment(
-                config_info)
-            for task in self.tasks:
-                task(config_info)
-            self.executor.message("")
+                config_info["current_target"] = target
+                config_info["current_config"] = self.components.get(target)
+                config_info[target] = {}
+                config_info["env"] = devpipeline_core.config.env.create_environment(
+                    config_info)
+                for task in self.tasks:
+                    task(config_info)
+                self.executor.message("")
+        finally:
+            self.components.write()
 
 
 def make_command(tasks, *args, **kwargs):
