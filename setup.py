@@ -28,7 +28,8 @@ setup(
         ],
 
         'devpipeline.config_sanitizers': [
-            "empty-depends = devpipeline_core.config.sanitizer:_sanitize_empty_depends"
+            "empty-depends = devpipeline_core.config.sanitizer:_sanitize_empty_depends",
+            "implicit-depends = devpipeline_core.config.sanitizer:_sanitize_implicit_depends"
         ]
     },
 
