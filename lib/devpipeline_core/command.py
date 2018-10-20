@@ -229,6 +229,6 @@ def execute_command(command, args):
             # silently swallowing the error isn't terrible.
             pass
 
-    except Exception as failure:
+    except Exception as failure:  # pylint: disable=broad-except
         print("Error: {}".format(str(failure)), file=sys.stderr)
         sys.exit(1)

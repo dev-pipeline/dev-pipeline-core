@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+"""Code related to project sanitization."""
+
 import re
 
 import devpipeline_core.plugin
@@ -22,9 +24,9 @@ def _sanitize_implicit_depends(configuration, error_fn):
         component_deps = component.get_list("depends")
         for key in component:
             val = component.get(key, raw=True)
-            m = _IMPLICIT_PATTERN.search(val)
-            if m:
-                dep = m.group(1)
+            match = _IMPLICIT_PATTERN.search(val)
+            if match:
+                dep = match.group(1)
                 if dep not in component_deps:
                     error_fn(
                         "{}:{} has an implicit dependency on {}".format(
@@ -36,5 +38,17 @@ _SANITIZERS = devpipeline_core.plugin.query_plugins(
 
 
 def sanitize(configuration, error_fn):
-    for name, fn in _SANITIZERS.items():
-        fn(configuration, lambda warning, n=name: error_fn(n, warning))
+    """
+    Run all availalbe sanitizers across a configuration.
+
+    Arguments:
+    configuration - a full project configuration
+    error_fn - A function to call if a sanitizer check fails.  The function
+               takes a single argument: a description of the problem; provide
+               specifics if possible, including the componnet, the part of the
+               configuration that presents an issue, etc..
+    """
+    for name, sanitize_fn in _SANITIZERS.items():
+        sanitize_fn(
+            configuration,
+            lambda warning, n=name: error_fn(n, warning))

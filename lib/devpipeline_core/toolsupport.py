@@ -28,7 +28,12 @@ class SimpleTool():
 
 
 class MissingToolKey(Exception):
+    """
+    An exception to emit if a component doesn't have a required tool configured.
+    """
+
     def __init__(self, key, component):
+        super().__init__()
         self._key = key
         self._component_name = component.name()
 
