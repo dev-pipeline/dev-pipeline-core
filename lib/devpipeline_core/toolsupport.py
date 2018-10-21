@@ -41,6 +41,35 @@ class MissingToolKey(Exception):
         return "'{}' unspecified in {}".format(self._key, self._component_name)
 
 
+def _choose_key(config, keys):
+    for key in keys:
+        if key in config:
+            return key
+    return keys[0]
+
+
+def choose_tool_key(full_configuration, keys):
+    """
+    Select the key for a tool from a list of supported tools.
+
+    This function is designed to help when multiple keys can be used to specify
+    an option (e.g., during migration from one name to another).  The values in
+    keys should be ordered based on preference, as that's the order they'll be
+    checked.  If anything other than the first entry is selected, a warning
+    will be displayed telling the user to migrate their configuration.
+
+    Arguments:
+    full_configuration - the full configuration for a run of the project
+    keys - a list of keys to consider
+    """
+    tool_key = _choose_key(full_configuration['current_config'], keys)
+    if tool_key != keys[0]:
+        full_configuration['executor'].warning(
+            '{} is deprecated; migrate to {}'.format(
+                tool_key, keys[0]))
+    return tool_key
+
+
 def tool_builder(component, key, tool_map, *args):
     """This helper function initializes a tool with the given args."""
     # pylint: disable=protected-access
