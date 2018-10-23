@@ -11,6 +11,26 @@ import devpipeline_core.config.env
 _CONFIG_DIR = "{}/../files".format(os.path.dirname(os.path.abspath(__file__)))
 
 
+class _ConfigWrapper:
+    def __init__(self, vals):
+        self._vals = vals
+
+    def get(self, key, raw=False, fallback=None):
+        if key in self._vals:
+            return self._vals[key]
+        return fallback
+
+    def get_list(self, key, fallback=None, split=','):
+        fallback = fallback or []
+        ret = self.get(key, fallback)
+        if ret:
+            return ret.split(split)
+        return ret
+
+    def __iter__(self):
+        return iter(self._vals)
+
+
 def _make_config_map(target, profile_list, override_list):
     ret = {
         "config_dir": _CONFIG_DIR,
@@ -18,10 +38,12 @@ def _make_config_map(target, profile_list, override_list):
         "current_config": {},
         target: {}
     }
+    config = {}
     if profile_list:
-        ret["current_config"]["dp.profile_name"] = profile_list
+        config["dp.profile_name"] = profile_list
     if override_list:
-        ret["current_config"]["dp.overrides"] = override_list
+        config["dp.overrides"] = override_list
+    ret["current_config"] = _ConfigWrapper(config)
     return ret
 
 
