@@ -14,10 +14,10 @@ def _get_config_dir():
     return _DEFAULT_PATH
 
 
-def _make_path(base_dir, ending):
+def _make_path(base_dir, *endings):
     if not base_dir:
         base_dir = _get_config_dir()
-    return os.path.join(base_dir, ending)
+    return os.path.join(base_dir, *endings)
 
 
 def _override_base_dir(config_map):
