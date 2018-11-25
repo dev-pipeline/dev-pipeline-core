@@ -5,50 +5,7 @@
 import os
 import re
 
-import devpipeline_core.config.modifier
-import devpipeline_core.config.override
-import devpipeline_core.config.profile
-
 _ENV_PATTERN = re.compile(R"env.(\w+)")
-
-
-def _add_override(values, adjustments):
-    for key in values:
-        match = _ENV_PATTERN.match(key)
-        if match:
-            adjustments[match.group(1)] = None
-
-
-def _source_config(config_map, adjustments):
-    _add_override(config_map["current_config"], adjustments)
-
-
-def _source_profiles(config_map, adjustments):
-    def _add_override_helper(profile_name, profile_config):
-        # pylint: disable=unused-argument
-        _add_override(profile_config, adjustments)
-
-    devpipeline_core.config.profile.apply_profiles(
-        config_map["current_config"],
-        config_map, _add_override_helper)
-
-
-def _source_overrides(config_map, adjustments):
-    def _add_override_helper(overrides, values):
-        # pylint: disable=unused-argument
-        _add_override(values, adjustments)
-
-    devpipeline_core.config.override.apply_overrides(
-        config_map["current_config"],
-        config_map["current_target"],
-        config_map, _add_override_helper)
-
-
-_SOURCE_FUNCTIONS = [
-    _source_config,
-    _source_profiles,
-    _source_overrides
-]
 
 
 def get_env_list(config_map):
@@ -63,8 +20,8 @@ def get_env_list(config_map):
     config_map - A configuration map.
     """
     env_adjustments = {}
-    for source in _SOURCE_FUNCTIONS:
-        source(config_map, env_adjustments)
+    #for source in _SOURCE_FUNCTIONS:
+        #source(config_map, env_adjustments)
     return env_adjustments.keys()
 
 

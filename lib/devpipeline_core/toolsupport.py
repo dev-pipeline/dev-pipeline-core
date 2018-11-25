@@ -1,9 +1,6 @@
 #!/usr/bin/python3
 """This module has tool helper classes and functions."""
 
-import devpipeline_core.config.modifier
-
-
 class SimpleTool():
     """
     This class implements a simple tool for the dev-pipeline infrastructure.
@@ -104,11 +101,17 @@ def args_builder(prefix, current_target, args_dict, value_found_fn):
                  value the option requires.
     value_found_fn -- A function to call when a match is found.
     """
+    current_config = current_target["current_config"]
     for key, separator in args_dict.items():
         option = "{}.{}".format(prefix, key)
-        value = devpipeline_core.config.modifier.modify_everything(
-            current_target["current_config"].get(option), current_target, option, separator)
-        value_found_fn(value, key)
+        value = current_config.get_list(option)
+        if value:
+            if separator:
+                value = separator.join(value)
+            else:
+                if len(value) == 1:
+                    value = value[0]
+            value_found_fn(value, key)
 
 
 def build_flex_args_keys(components):
