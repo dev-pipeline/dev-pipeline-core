@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """This module has tool helper classes and functions."""
 
+
 class SimpleTool():
     """
     This class implements a simple tool for the dev-pipeline infrastructure.
@@ -83,6 +84,24 @@ def tool_builder(component, key, tool_map, *args):
         raise MissingToolKey(key, component)
 
 
+class _NullJoiner:
+    def __init__(self, component_name, key):
+        self._component_name = component_name
+        self._key = key
+
+    def join(self, vals):
+        if len(vals) == 1:
+            return vals[0]
+        raise Exception(
+            "Too many values for {}:{}".format(
+                self._component_name, self._key))
+
+
+class ListSeparator:
+    def join(self, vals):
+        return vals
+
+
 def args_builder(prefix, current_target, args_dict, value_found_fn):
     """
     Process arguments a tool cares about.
@@ -106,12 +125,9 @@ def args_builder(prefix, current_target, args_dict, value_found_fn):
         option = "{}.{}".format(prefix, key)
         value = current_config.get_list(option)
         if value:
-            if separator:
-                value = separator.join(value)
-            else:
-                if len(value) == 1:
-                    value = value[0]
-            value_found_fn(value, key)
+            if separator is None:
+                separator = _NullJoiner(current_config.name(), option)
+            value_found_fn(separator.join(value), key)
 
 
 def build_flex_args_keys(components):
