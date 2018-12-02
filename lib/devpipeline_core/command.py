@@ -7,8 +7,7 @@ import argparse
 import errno
 import sys
 
-import devpipeline_core.config.env
-import devpipeline_core.config.sanitizer
+import devpipeline_core.env
 import devpipeline_core.resolve
 import devpipeline_core.version
 
@@ -184,7 +183,7 @@ class TargetCommand(Command):
                 config_info["current_target"] = target
                 config_info["current_config"] = self.components.get(target)
                 config_info[target] = {}
-                config_info["env"] = devpipeline_core.config.env.create_environment(
+                config_info["env"] = devpipeline_core.env.create_environment(
                     config_info)
                 for task in self.tasks:
                     task(config_info)
