@@ -141,7 +141,7 @@ class TargetCommand(Command):
             self.targets = parsed_args.targets
         else:
             parsed_args.dependencies = "deep"
-            self.targets = self.components.components()
+            self.targets = self.components.keys()
         self.setup(parsed_args)
         if self.verbosity:
             helper_fn = devpipeline_core.EXECUTOR_TYPES.get(
