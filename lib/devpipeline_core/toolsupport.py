@@ -11,9 +11,9 @@ class SimpleTool():
 
     # pylint: disable=too-few-public-methods
     def __init__(self, current_target, real):
-        self.env = current_target["env"]
-        self.executor = current_target["executor"]
-        self.name = current_target["current_target"]
+        self.env = current_target.env
+        self.executor = current_target.executor
+        self.name = current_target.target
         self.real = real
 
     def _call_helper(self, step, helper_fn, *fn_args):
@@ -60,9 +60,9 @@ def choose_tool_key(full_configuration, keys):
     full_configuration - the full configuration for a run of the project
     keys - a list of keys to consider
     """
-    tool_key = _choose_key(full_configuration['current_config'], keys)
+    tool_key = _choose_key(full_configuration.config, keys)
     if tool_key != keys[0]:
-        full_configuration['executor'].warning(
+        full_configuration.executor.warning(
             '{} is deprecated; migrate to {}'.format(
                 tool_key, keys[0]))
     return tool_key
@@ -120,7 +120,7 @@ def args_builder(prefix, current_target, args_dict, value_found_fn):
                  value the option requires.
     value_found_fn -- A function to call when a match is found.
     """
-    current_config = current_target["current_config"]
+    current_config = current_target.config
     for key, separator in args_dict.items():
         option = "{}.{}".format(prefix, key)
         value = current_config.get_list(option)

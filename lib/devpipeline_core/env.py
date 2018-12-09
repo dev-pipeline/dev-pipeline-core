@@ -25,7 +25,7 @@ def _append_env(config, base_key, current_value):
     return current_value
 
 
-def create_environment(config_map):
+def create_environment(target_config):
     """
     Create a modified environment.
 
@@ -33,19 +33,18 @@ def create_environment(config_map):
     config_map - A configuration map.
     """
     ret = os.environ.copy()
-    current_config = config_map["current_config"]
-    for env in current_config.get_list("dp.env_list"):
+    for env in target_config.get_list("dp.env_list"):
         real_env = env.upper()
         value = os.environ.get(real_env)
-        value = _prepend_env(current_config, env, value)
-        value = _append_env(current_config, env, value)
+        value = _prepend_env(target_config, env, value)
+        value = _append_env(target_config, env, value)
         if value is not None:
             ret[real_env] = value
         else:
             # either an override or erase
             key = "env.{}".format(env)
-            if key in current_config:
-                ret[real_env] = os.pathsep.join(current_config.get_list(key))
+            if key in target_config:
+                ret[real_env] = os.pathsep.join(target_config.get_list(key))
             else:
                 if real_env in ret:
                     del ret[real_env]

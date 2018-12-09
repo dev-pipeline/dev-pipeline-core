@@ -7,6 +7,7 @@ import argparse
 import errno
 import sys
 
+import devpipeline_core.configinfo
 import devpipeline_core.env
 import devpipeline_core.resolve
 import devpipeline_core.version
@@ -172,19 +173,16 @@ class TargetCommand(Command):
 
     def process_targets(self, build_order):
         """Calls the tasks with the appropriate options for each of the targets"""
-        config_info = {
-            "executor": self.executor
-        }
+        config_info = devpipeline_core.configinfo.ConfigInfo(self.executor)
         try:
             for target in build_order:
-                self.executor.message("  {}".format(target))
-                self.executor.message("-" * (4 + len(target)))
+                config_info.executor.message("  {}".format(target))
+                config_info.executor.message("-" * (4 + len(target)))
 
-                config_info["current_target"] = target
-                config_info["current_config"] = self.components.get(target)
-                config_info[target] = {}
-                config_info["env"] = devpipeline_core.env.create_environment(
-                    config_info)
+                config_info.target = target
+                config_info.config = self.components.get(target)
+                config_info.env = devpipeline_core.env.create_environment(
+                    config_info.config)
                 for task in self.tasks:
                     task(config_info)
                 self.executor.message("")
