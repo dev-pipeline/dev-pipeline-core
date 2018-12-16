@@ -24,11 +24,3 @@ class ConfigInfo:
     @env.setter
     def env(self, env):
         self._current_env = env
-
-    @property
-    def target(self):
-        return self._current_target
-
-    @target.setter
-    def target(self, target):
-        self._current_target = target

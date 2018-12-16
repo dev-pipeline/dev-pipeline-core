@@ -13,7 +13,7 @@ class SimpleTool():
     def __init__(self, current_target, real):
         self.env = current_target.env
         self.executor = current_target.executor
-        self.name = current_target.target
+        self.name = current_target.config.name
         self.real = real
 
     def _call_helper(self, step, helper_fn, *fn_args):
@@ -33,7 +33,7 @@ class MissingToolKey(Exception):
     def __init__(self, key, component):
         super().__init__()
         self._key = key
-        self._component_name = component.name()
+        self._component_name = component.name
 
     def __str__(self):
         return "'{}' unspecified in {}".format(self._key, self._component_name)
@@ -79,7 +79,7 @@ def tool_builder(component, key, tool_map, *args):
         else:
             raise Exception(
                 "Unknown {} '{}' for {}".format(
-                    key, tool_name, component.name()))
+                    key, tool_name, component.name))
     else:
         raise MissingToolKey(key, component)
 
@@ -126,7 +126,7 @@ def args_builder(prefix, current_target, args_dict, value_found_fn):
         value = current_config.get_list(option)
         if value:
             if separator is None:
-                separator = _NullJoiner(current_config.name(), option)
+                separator = _NullJoiner(current_config.name, option)
             value_found_fn(separator.join(value), key)
 
 

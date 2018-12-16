@@ -179,7 +179,6 @@ class TargetCommand(Command):
                 config_info.executor.message("  {}".format(target))
                 config_info.executor.message("-" * (4 + len(target)))
 
-                config_info.target = target
                 config_info.config = self.components.get(target)
                 config_info.env = devpipeline_core.env.create_environment(
                     config_info.config)
