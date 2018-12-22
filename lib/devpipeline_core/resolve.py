@@ -38,7 +38,7 @@ def _build_dep_data(targets, components):
         """
         dependencies = component.get("depends")
         if dependencies:
-            return list(x.strip() for x in dependencies.split(','))
+            return list(x.strip() for x in dependencies.split(","))
         return list()
 
     # seed the initial dependencies
@@ -51,8 +51,7 @@ def _build_dep_data(targets, components):
         current = to_be_processed.pop(0)
         if current in components:
             if current not in processed_targets:
-                component_deps = _get_deps_from_component(
-                    components.get(current))
+                component_deps = _get_deps_from_component(components.get(current))
                 counts[current] = len(component_deps)
                 _add_reverse_deps(current, component_deps)
 
@@ -64,8 +63,8 @@ def _build_dep_data(targets, components):
 
     if missing_components:
         raise Exception(
-            "Missing configuration for components: {}".format(
-                missing_components))
+            "Missing configuration for components: {}".format(missing_components)
+        )
     return (counts, reverse_deps)
 
 
@@ -77,6 +76,7 @@ def process_dependencies(targets, components, resolved_fn):
 
     An exception will be thrown if dependencies can't be resolved.
     """
+
     def get_resolved_targets(counts):
         """Get a list of targets with a dependency count of 0."""
         resolved_targets = list()
@@ -114,7 +114,8 @@ def process_dependencies(targets, components, resolved_fn):
 
 _DEEP_RESOLVER = (
     process_dependencies,
-    "A resolver that includes the entire dependency tree for every target.")
+    "A resolver that includes the entire dependency tree for every target.",
+)
 
 
 def _process_reverse(targets, components, resolved_fn):
@@ -137,7 +138,8 @@ def _process_reverse(targets, components, resolved_fn):
 
 _REVERSE_RESOLVER = (
     _process_reverse,
-    "A resolver that includes targets plus any component that depends on them.")
+    "A resolver that includes targets plus any component that depends on them.",
+)
 
 
 def _process_none(targets, components, resolved_fn):
@@ -149,7 +151,8 @@ def _process_none(targets, components, resolved_fn):
 
 _NONE_RESOLVER = (
     _process_none,
-    "Only explicilty specified targets will be considered.")
+    "Only explicilty specified targets will be considered.",
+)
 
 
 def order_dependencies(targets, components):

@@ -43,7 +43,8 @@ class QuietExecutor(_ExecutorBase):
 _QUIET_EXECUTOR = (
     QuietExecutor,
     "An executor that prints no additional information.  Information pinted by"
-    " any executed tools will be printed without modification.")
+    " any executed tools will be printed without modification.",
+)
 
 
 class SilentExecutor(_ExecutorBase):
@@ -55,7 +56,7 @@ class SilentExecutor(_ExecutorBase):
 
     def execute(self, environment, *args):
         # pylint: disable=invalid-name
-        with open(os.devnull, 'w') as FNULL:
+        with open(os.devnull, "w") as FNULL:
             for cmd in args:
                 cmd["stdout"] = FNULL
                 self._execute_single(environment, **cmd)
@@ -64,7 +65,8 @@ class SilentExecutor(_ExecutorBase):
 _SILENT_EXECUTOR = (
     SilentExecutor,
     "An executor that removes all standard output.  Anything printed to "
-    "standard error will still be emitted.")
+    "standard error will still be emitted.",
+)
 
 
 class VerboseExecutor(_ExecutorBase):
@@ -80,7 +82,8 @@ class VerboseExecutor(_ExecutorBase):
 
 _VERBOSE_EXECUTOR = (
     VerboseExecutor,
-    "An executor that prints lots of extra information.")
+    "An executor that prints lots of extra information.",
+)
 
 
 class DryRunExecutor(_ExecutorBase):
@@ -97,4 +100,5 @@ class DryRunExecutor(_ExecutorBase):
 _DRYRUN_EXECUTOR = (
     DryRunExecutor,
     "An executor that prints what it would do, but doesn't execute anthing.  "
-    "This is useful for debugging a configuration.")
+    "This is useful for debugging a configuration.",
+)

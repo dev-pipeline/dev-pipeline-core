@@ -14,7 +14,7 @@ def _sanitize_empty_depends(configuration, error_fn):
                 error_fn("Empty dependency in {}".format(name))
 
 
-_IMPLICIT_PATTERN = re.compile(R'\$\{([a-z_\-0-9\.]+):.+\}')
+_IMPLICIT_PATTERN = re.compile(r"\$\{([a-z_\-0-9\.]+):.+\}")
 
 
 def _sanitize_implicit_depends(configuration, error_fn):
@@ -27,12 +27,11 @@ def _sanitize_implicit_depends(configuration, error_fn):
                 dep = match.group(1)
                 if dep not in component_deps:
                     error_fn(
-                        "{}:{} has an implicit dependency on {}".format(
-                            name, key, dep))
+                        "{}:{} has an implicit dependency on {}".format(name, key, dep)
+                    )
 
 
-_SANITIZERS = devpipeline_core.plugin.query_plugins(
-    "devpipeline.config_sanitizers")
+_SANITIZERS = devpipeline_core.plugin.query_plugins("devpipeline.config_sanitizers")
 
 
 def sanitize(configuration, error_fn):
@@ -47,6 +46,4 @@ def sanitize(configuration, error_fn):
                configuration that presents an issue, etc..
     """
     for name, sanitize_fn in _SANITIZERS.items():
-        sanitize_fn(
-            configuration,
-            lambda warning, n=name: error_fn(n, warning))
+        sanitize_fn(configuration, lambda warning, n=name: error_fn(n, warning))

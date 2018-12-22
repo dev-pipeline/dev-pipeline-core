@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-with open('README.rst') as f:
+with open("README.rst") as f:
     long_description = f.read()
 
 _VERSION = "0.4.0"
@@ -10,35 +10,29 @@ _VERSION = "0.4.0"
 setup(
     name="dev-pipeline-core",
     version=_VERSION,
-    package_dir={
-        "": "lib"
-    },
+    package_dir={"": "lib"},
     packages=find_packages("lib"),
-
     entry_points={
-        'devpipeline.executors': [
+        "devpipeline.executors": [
             "dry-run = devpipeline_core.executor:_DRYRUN_EXECUTOR",
             "quiet = devpipeline_core.executor:_QUIET_EXECUTOR",
             "silent = devpipeline_core.executor:_SILENT_EXECUTOR",
-            "verbose = devpipeline_core.executor:_VERBOSE_EXECUTOR"
+            "verbose = devpipeline_core.executor:_VERBOSE_EXECUTOR",
         ],
-
-        'devpipeline.resolvers': [
+        "devpipeline.resolvers": [
             "deep = devpipeline_core.resolve:_DEEP_RESOLVER",
             "none = devpipeline_core.resolve:_NONE_RESOLVER",
-            "reverse = devpipeline_core.resolve:_REVERSE_RESOLVER"
+            "reverse = devpipeline_core.resolve:_REVERSE_RESOLVER",
         ],
-
-        'devpipeline.config_sanitizers': [
+        "devpipeline.config_sanitizers": [
             "empty-depends = devpipeline_core.sanitizer:_sanitize_empty_depends",
-            "implicit-depends = devpipeline_core.sanitizer:_sanitize_implicit_depends"
-        ]
+            "implicit-depends = devpipeline_core.sanitizer:_sanitize_implicit_depends",
+        ],
     },
-
     author="Stephen Newell",
     description="Core libraries for dev-pipeline",
     long_description=long_description,
-    long_description_content_type='text/x-rst',
+    long_description_content_type="text/x-rst",
     license="BSD-2",
     url="https://github.com/dev-pipeline/dev-pipeline-core",
     classifiers=[
@@ -46,6 +40,6 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: BSD License",
         "Topic :: Software Development",
-        "Topic :: Utilities"
-    ]
+        "Topic :: Utilities",
+    ],
 )

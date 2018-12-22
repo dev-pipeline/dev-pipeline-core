@@ -2,7 +2,7 @@
 """This module has tool helper classes and functions."""
 
 
-class SimpleTool():
+class SimpleTool:
     """
     This class implements a simple tool for the dev-pipeline infrastructure.
     It handles setting the environment and working with an executor so clients
@@ -63,8 +63,8 @@ def choose_tool_key(full_configuration, keys):
     tool_key = _choose_key(full_configuration.config, keys)
     if tool_key != keys[0]:
         full_configuration.executor.warning(
-            '{} is deprecated; migrate to {}'.format(
-                tool_key, keys[0]))
+            "{} is deprecated; migrate to {}".format(tool_key, keys[0])
+        )
     return tool_key
 
 
@@ -78,8 +78,8 @@ def tool_builder(component, key, tool_map, *args):
             return tool_fn[0](*args)
         else:
             raise Exception(
-                "Unknown {} '{}' for {}".format(
-                    key, tool_name, component.name))
+                "Unknown {} '{}' for {}".format(key, tool_name, component.name)
+            )
     else:
         raise MissingToolKey(key, component)
 
@@ -94,8 +94,8 @@ class _NullJoiner:
         if len(vals) == 1:
             return vals[0]
         raise Exception(
-            "Too many values for {}:{}".format(
-                self._component_name, self._key))
+            "Too many values for {}:{}".format(self._component_name, self._key)
+        )
 
 
 class ListSeparator:
@@ -145,6 +145,7 @@ def build_flex_args_keys(components):
     Arguments
     components -- A list of lists that should be combined to form options.
     """
+
     def _prepend_first(components, sub_components):
         ret = []
         for first in components[0]:

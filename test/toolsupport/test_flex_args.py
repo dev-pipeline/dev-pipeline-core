@@ -17,29 +17,18 @@ class TestFlexArgs(unittest.TestCase):
 
     def test_simple(self):
         """Verify one level of expansion works"""
-        expected = [
-            "foo.bar",
-            "foo.baz"
-        ]
-        expanded = devpipeline_core.toolsupport.build_flex_args_keys([
-            ["foo"],
-            ["bar", "baz"]
-        ])
+        expected = ["foo.bar", "foo.baz"]
+        expanded = devpipeline_core.toolsupport.build_flex_args_keys(
+            [["foo"], ["bar", "baz"]]
+        )
         self._validate(expected, expanded)
 
     def test_complex(self):
         """Verify multiple levels of expansion work"""
-        expected = [
-            "foo.bar.baz",
-            "foo.bar.bing",
-            "foo.oof.baz",
-            "foo.oof.bing"
-        ]
-        expanded = devpipeline_core.toolsupport.build_flex_args_keys([
-            ["foo"],
-            ["bar", "oof"],
-            ["baz", "bing"]
-        ])
+        expected = ["foo.bar.baz", "foo.bar.bing", "foo.oof.baz", "foo.oof.bing"]
+        expanded = devpipeline_core.toolsupport.build_flex_args_keys(
+            [["foo"], ["bar", "oof"], ["baz", "bing"]]
+        )
         self._validate(expected, expanded)
 
 

@@ -15,15 +15,17 @@ import devpipeline_core.version
 
 def _print_resolvers():
     for dependency_resolver in sorted(devpipeline_core.DEPENDENCY_RESOLVERS):
-        print("{} - {}".format(
-            dependency_resolver,
-            devpipeline_core.DEPENDENCY_RESOLVERS[dependency_resolver][1]))
+        print(
+            "{} - {}".format(
+                dependency_resolver,
+                devpipeline_core.DEPENDENCY_RESOLVERS[dependency_resolver][1],
+            )
+        )
 
 
 def _print_executors():
     for executor in sorted(devpipeline_core.EXECUTOR_TYPES):
-        print("{} - {}".format(executor,
-                               devpipeline_core.EXECUTOR_TYPES[executor][1]))
+        print("{} - {}".format(executor, devpipeline_core.EXECUTOR_TYPES[executor][1]))
 
 
 class Command(object):
@@ -36,8 +38,8 @@ class Command(object):
 
     def __init__(self, *args, **kwargs):
         self.parser = argparse.ArgumentParser(
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-            *args, **kwargs)
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter, *args, **kwargs
+        )
 
     def add_argument(self, *args, **kwargs):
         """
@@ -53,10 +55,13 @@ class Command(object):
         Arguments:
         version - the version of whatever provides the command
         """
-        self.parser.add_argument("--version", action="version",
-                                 version="%(prog)s {} (core {})".format(
-                                     version,
-                                     devpipeline_core.version.STRING))
+        self.parser.add_argument(
+            "--version",
+            action="version",
+            version="%(prog)s {} (core {})".format(
+                version, devpipeline_core.version.STRING
+            ),
+        )
 
     def execute(self, *args, **kwargs):
         """Initializes and runs the tool"""
@@ -77,11 +82,14 @@ class TargetCommand(Command):
 
     """A devpipeline tool that executes a list of tasks against a list of targets"""
 
-    def __init__(self, config_fn,
-                 *args, **kwargs):
+    def __init__(self, config_fn, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.add_argument("targets", nargs="*", default=argparse.SUPPRESS,
-                          help="The targets to operate on")
+        self.add_argument(
+            "targets",
+            nargs="*",
+            default=argparse.SUPPRESS,
+            help="The targets to operate on",
+        )
         self.executor = None
         self.components = None
         self.targets = None
@@ -97,12 +105,17 @@ class TargetCommand(Command):
         This will add the --dependencies and --list-dependency-resolvers
         command line arguments.
         """
-        self.add_argument("--dependencies",
-                          help="Control how build dependencies are handled.",
-                          default="deep")
-        self.add_argument("--list-dependency-resolvers", action="store_true",
-                          default=argparse.SUPPRESS,
-                          help="List the dependency resolution methods.")
+        self.add_argument(
+            "--dependencies",
+            help="Control how build dependencies are handled.",
+            default="deep",
+        )
+        self.add_argument(
+            "--list-dependency-resolvers",
+            action="store_true",
+            default=argparse.SUPPRESS,
+            help="List the dependency resolution methods.",
+        )
 
     def enable_executors(self):
         """
@@ -111,12 +124,15 @@ class TargetCommand(Command):
         This will add the --executor and --list-executors command line
         arguments.
         """
-        self.add_argument("--executor",
-                          help="The method to execute commands.",
-                          default="quiet")
-        self.add_argument("--list-executors", action="store_true",
-                          default=argparse.SUPPRESS,
-                          help="List the available executors.")
+        self.add_argument(
+            "--executor", help="The method to execute commands.", default="quiet"
+        )
+        self.add_argument(
+            "--list-executors",
+            action="store_true",
+            default=argparse.SUPPRESS,
+            help="List the available executors.",
+        )
         self.verbosity = True
 
     def set_tasks(self, tasks):
@@ -145,17 +161,16 @@ class TargetCommand(Command):
             self.targets = self.components.keys()
         self.setup(parsed_args)
         if self.verbosity:
-            helper_fn = devpipeline_core.EXECUTOR_TYPES.get(
-                parsed_args.executor)
+            helper_fn = devpipeline_core.EXECUTOR_TYPES.get(parsed_args.executor)
             if not helper_fn:
                 raise Exception(
-                    "{} isn't a valid executor".format(parsed_args.executor))
+                    "{} isn't a valid executor".format(parsed_args.executor)
+                )
             else:
                 self.executor = helper_fn[0]()
         if "dependencies" not in parsed_args:
             parsed_args.dependencies = "deep"
-        resolver = devpipeline_core.DEPENDENCY_RESOLVERS.get(
-            parsed_args.dependencies)
+        resolver = devpipeline_core.DEPENDENCY_RESOLVERS.get(parsed_args.dependencies)
         if resolver:
             self.resolver = resolver[0]
         return self.process()
@@ -181,7 +196,8 @@ class TargetCommand(Command):
 
                 config_info.config = self.components.get(target)
                 config_info.env = devpipeline_core.env.create_environment(
-                    config_info.config)
+                    config_info.config
+                )
                 for task in self.tasks:
                     task(config_info)
                 self.executor.message("")

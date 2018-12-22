@@ -5,8 +5,7 @@
 import os
 
 
-def _append_prepend_env(config, suffix_key, base_key,
-                        builder_string, current_value):
+def _append_prepend_env(config, suffix_key, base_key, builder_string, current_value):
     env_key = "env.{}.{}".format(base_key, suffix_key)
     if env_key in config:
         env_value = os.pathsep.join(config.get_list(env_key))
@@ -17,13 +16,11 @@ def _append_prepend_env(config, suffix_key, base_key,
 
 
 def _prepend_env(config, base_key, current_value):
-    return _append_prepend_env(
-        config, "prepend", base_key, "{2}{}{0}", current_value)
+    return _append_prepend_env(config, "prepend", base_key, "{2}{}{0}", current_value)
 
 
 def _append_env(config, base_key, current_value):
-    return _append_prepend_env(
-        config, "append", base_key, "{}{}{}", current_value)
+    return _append_prepend_env(config, "append", base_key, "{}{}{}", current_value)
 
 
 def create_environment(target_config):
