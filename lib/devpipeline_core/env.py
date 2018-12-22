@@ -5,24 +5,25 @@
 import os
 
 
-def _prepend_env(config, base_key, current_value):
-    prepend_key = "env.{}.prepend".format(base_key)
-    if prepend_key in config:
-        prepend_value = os.pathsep.join(config.get_list(prepend_key))
+def _append_prepend_env(config, suffix_key, base_key,
+                        builder_string, current_value):
+    env_key = "env.{}.{}".format(base_key, suffix_key)
+    if env_key in config:
+        env_value = os.pathsep.join(config.get_list(env_key))
         if current_value is not None:
-            return "{}{}{}".format(prepend_value, os.pathsep, current_value)
-        return prepend_value
+            return builder_string.format(current_value, os.pathsep, env_value)
+        return env_value
     return current_value
+
+
+def _prepend_env(config, base_key, current_value):
+    return _append_prepend_env(
+        config, "prepend", base_key, "{2}{}{0}", current_value)
 
 
 def _append_env(config, base_key, current_value):
-    append_key = "env.{}.append".format(base_key)
-    if append_key in config:
-        append_value = os.pathsep.join(config.get_list(append_key))
-        if current_value is not None:
-            return "{}{}{}".format(current_value, os.pathsep, append_value)
-        return append_value
-    return current_value
+    return _append_prepend_env(
+        config, "append", base_key, "{}{}{}", current_value)
 
 
 def create_environment(target_config):

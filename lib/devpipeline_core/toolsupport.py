@@ -101,6 +101,7 @@ class _NullJoiner:
 class ListSeparator:
     # pylint: disable=too-few-public-methods
     def join(self, vals):
+        # pylint: disable=no-self-use
         return vals
 
 
