@@ -85,6 +85,7 @@ def tool_builder(component, key, tool_map, *args):
 
 
 class _NullJoiner:
+    # pylint: disable=too-few-public-methods
     def __init__(self, component_name, key):
         self._component_name = component_name
         self._key = key
@@ -98,6 +99,7 @@ class _NullJoiner:
 
 
 class ListSeparator:
+    # pylint: disable=too-few-public-methods
     def join(self, vals):
         return vals
 

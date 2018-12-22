@@ -4,6 +4,8 @@
 class ConfigInfo:
     def __init__(self, executor):
         self._executor = executor
+        self._current_config = None
+        self._current_env = None
 
     @property
     def executor(self):
