@@ -5,9 +5,11 @@ from setuptools import setup, find_packages
 with open('README.rst') as f:
     long_description = f.read()
 
+_VERSION = "0.4.0"
+
 setup(
     name="dev-pipeline-core",
-    version="0.4.0",
+    version=_VERSION,
     package_dir={
         "": "lib"
     },
