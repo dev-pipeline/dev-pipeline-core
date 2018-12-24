@@ -119,7 +119,7 @@ _DEEP_RESOLVER = (
 
 
 def _process_reverse(targets, components, resolved_fn):
-    reverse_deps = _build_dep_data(components.components(), components)[1]
+    reverse_deps = _build_dep_data(components.keys(), components)[1]
     visited_targets = {}
 
     required_targets = targets.copy()
