@@ -67,7 +67,7 @@ class TestStandardResolver(unittest.TestCase):
         configuration = mockconfig.MockConfig({"b": {"depends": "b"}})
 
         def _run_fn():
-            order = devpipeline_core.resolve.order_dependencies(["b"], configuration)
+            devpipeline_core.resolve.order_dependencies(["b"], configuration)
 
         self.assertRaises(devpipeline_core.resolve.CircularDependencyException, _run_fn)
 
