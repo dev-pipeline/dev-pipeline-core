@@ -8,7 +8,7 @@ class MockComponent:
 
     @property
     def name(self):
-        return self.name
+        return self._name
 
     def get(self, key, raw=False, fallback=None):
         return self._config.get(key, fallback)
@@ -44,8 +44,7 @@ class MockConfig:
 
     def get(self, component):
         """Get a specific component to operate on"""
-        # return _CachedComponent(self._config[component], self)
-        return self._config[component]
+        return MockComponent(component, self._config[component])
 
     def __iter__(self):
         return iter(self._config)
