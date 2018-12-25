@@ -23,6 +23,19 @@ def _append_env(config, base_key, current_value):
     return _append_prepend_env(config, "append", base_key, "{}{}{}", current_value)
 
 
+def _apply_change(env_set, env_key, value, component_config):
+    if value is not None:
+        env_set[env_key] = value
+    else:
+        # either an override or erase
+        key = "env.{}".format(env_key.lower())
+        if key in component_config:
+            env_set[env_key] = os.pathsep.join(component_config.get_list(key))
+        else:
+            if env_key in env_set:
+                del env_set[env_key]
+
+
 def create_environment(target_config):
     """
     Create a modified environment.
@@ -36,14 +49,5 @@ def create_environment(target_config):
         value = os.environ.get(real_env)
         value = _prepend_env(target_config, env, value)
         value = _append_env(target_config, env, value)
-        if value is not None:
-            ret[real_env] = value
-        else:
-            # either an override or erase
-            key = "env.{}".format(env)
-            if key in target_config:
-                ret[real_env] = os.pathsep.join(target_config.get_list(key))
-            else:
-                if real_env in ret:
-                    del ret[real_env]
+        _apply_change(ret, real_env, value, target_config)
     return ret

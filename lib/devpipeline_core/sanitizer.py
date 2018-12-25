@@ -17,18 +17,25 @@ def _sanitize_empty_depends(configuration, error_fn):
 _IMPLICIT_PATTERN = re.compile(r"\$\{([a-z_\-0-9\.]+):.+\}")
 
 
+def _check_implicit_depends(component, dependencies, key, error_fn):
+    val = component.get(key, raw=True)
+    match = _IMPLICIT_PATTERN.search(val)
+    if match:
+        dep = match.group(1)
+        if dep not in dependencies:
+            error_fn(
+                "{}:{} has an implicit dependency on {}".format(
+                    component.name, key, dep
+                )
+            )
+
+
 def _sanitize_implicit_depends(configuration, error_fn):
     for name, component in configuration.items():
+        del name
         component_deps = component.get_list("depends")
         for key in component:
-            val = component.get(key, raw=True)
-            match = _IMPLICIT_PATTERN.search(val)
-            if match:
-                dep = match.group(1)
-                if dep not in component_deps:
-                    error_fn(
-                        "{}:{} has an implicit dependency on {}".format(name, key, dep)
-                    )
+            _check_implicit_depends(component, component_deps, key, error_fn)
 
 
 _SANITIZERS = devpipeline_core.plugin.query_plugins("devpipeline.config_sanitizers")
