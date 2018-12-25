@@ -97,6 +97,7 @@ class TargetCommand(Command):
         self.resolver = None
         self.tasks = None
         self._config_fn = config_fn
+        self._special_options = {}
 
     def enable_dependency_resolution(self):
         """
@@ -116,6 +117,7 @@ class TargetCommand(Command):
             default=argparse.SUPPRESS,
             help="List the dependency resolution methods.",
         )
+        self._special_options["list_dependency_resolvers"] = _print_resolvers
 
     def enable_executors(self):
         """
@@ -134,6 +136,7 @@ class TargetCommand(Command):
             help="List the available executors.",
         )
         self.verbosity = True
+        self._special_options["list_executors"] = _print_executors
 
     def set_tasks(self, tasks):
         """
@@ -148,32 +151,52 @@ class TargetCommand(Command):
     def execute(self, *args, **kwargs):
         parsed_args = self.parser.parse_args(*args, **kwargs)
 
-        if "list_dependency_resolvers" in parsed_args:
-            return _print_resolvers()
-        elif "list_executors" in parsed_args:
-            return _print_executors()
+        def _check_special_options():
+            for option, fn in self._special_options.items():
+                if option in parsed_args:
+                    fn()
+                    return True
+            return False
 
-        self.components = self._config_fn()
-        if "targets" in parsed_args:
-            self.targets = parsed_args.targets
-        else:
-            parsed_args.dependencies = "deep"
-            self.targets = self.components.keys()
-        self.setup(parsed_args)
-        if self.verbosity:
-            helper_fn = devpipeline_core.EXECUTOR_TYPES.get(parsed_args.executor)
-            if not helper_fn:
-                raise Exception(
-                    "{} isn't a valid executor".format(parsed_args.executor)
-                )
+        def _setup_targets():
+            if "targets" in parsed_args:
+                self.targets = parsed_args.targets
             else:
-                self.executor = helper_fn[0]()
-        if "dependencies" not in parsed_args:
-            parsed_args.dependencies = "deep"
-        resolver = devpipeline_core.DEPENDENCY_RESOLVERS.get(parsed_args.dependencies)
-        if resolver:
-            self.resolver = resolver[0]
-        return self.process()
+                parsed_args.dependencies = "deep"
+                self.targets = self.components.keys()
+
+        def _get_executor():
+            if self.verbosity:
+                helper_fn = devpipeline_core.EXECUTOR_TYPES.get(parsed_args.executor)
+                if helper_fn:
+                    return helper_fn[0]()
+                else:
+                    raise Exception(
+                        "{} isn't a valid executor".format(parsed_args.executor)
+                    )
+            return None
+
+        def _get_resolver():
+            if "dependencies" not in parsed_args:
+                parsed_args.dependencies = "deep"
+            resolver = devpipeline_core.DEPENDENCY_RESOLVERS.get(
+                parsed_args.dependencies
+            )
+            if resolver:
+                return resolver[0]
+            else:
+                raise Exception(
+                    "{} isn't a valid resolver".format(parsed_args.dependencies)
+                )
+
+        if not _check_special_options():
+            self.components = self._config_fn()
+            _setup_targets()
+            self.setup(parsed_args)
+            self.executor = _get_executor()
+            self.resolver = _get_resolver()
+            return self.process()
+        return None
 
     def process(self):
         build_order = []
