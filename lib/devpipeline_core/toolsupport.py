@@ -16,9 +16,9 @@ class SimpleTool:
         self.name = current_target.config.name
         self.real = real
 
-    def _call_helper(self, step, helper_fn, *fn_args):
+    def _call_helper(self, step, helper_fn, *fn_args, **fn_kwargs):
         self.executor.message("{} {}".format(step, self.name))
-        cmds = helper_fn(*fn_args)
+        cmds = helper_fn(*fn_args, **fn_kwargs)
         if cmds:
             self.executor.execute(self.env, *cmds)
         else:
