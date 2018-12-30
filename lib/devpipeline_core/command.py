@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 
-"""This module defines several base classes that are common for
-the dev-pipeline utility"""
+"""
+Classes and functions releated to executing commands.
+"""
 
 import argparse
 import errno
@@ -30,11 +31,12 @@ def _print_executors():
 
 class Command(object):
 
-    """This is the base class for tools that can be used by dev-pipeline.
+    """This is the base class for dev-pipeline commands.
 
     In subclasses, override the following as needed:
         execute()
-        setup()"""
+        setup()
+    """
 
     def __init__(self, *args, **kwargs):
         self.parser = argparse.ArgumentParser(
@@ -44,7 +46,7 @@ class Command(object):
     def add_argument(self, *args, **kwargs):
         """
         Subclasses inject additional cli arguments to parse by calling this
-        function.
+        function.  Arguments are passed to an argparse.ArgumentParser instance.
         """
         self.parser.add_argument(*args, **kwargs)
 
@@ -64,23 +66,41 @@ class Command(object):
         )
 
     def execute(self, *args, **kwargs):
-        """Initializes and runs the tool"""
+        """
+        Initializes and runs the tool.
+
+        This is shorhand to parse command line arguments, then calling:
+            self.setup(parsed_arguments)
+            self.process()
+        """
         args = self.parser.parse_args(*args, **kwargs)
         self.setup(args)
         self.process()
 
     def setup(self, arguments):
-        """Subclasses should override this function to perform any pre-execution setup"""
+        """
+        Configure the command.  Subclasses should override this function if
+        they need to change behavior based on the command line arguments.
+
+        Arguments:
+        arguments - result of argparse.ArgumentParser.parse_args
+        """
         pass
 
     def process(self):
-        """Subclasses should override this function to do the work of executing the tool"""
+        """
+        Execute the command.  Subclasses are expected to override this
+        function.
+        """
         pass
 
 
 class TargetCommand(Command):
 
-    """A devpipeline tool that executes a list of tasks against a list of targets"""
+    """
+    A devpipeline command that executes a list of tasks against a list of
+    targets.
+    """
 
     def __init__(self, config_fn, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -210,7 +230,9 @@ class TargetCommand(Command):
         self.process_targets(build_order)
 
     def process_targets(self, build_order):
-        """Calls the tasks with the appropriate options for each of the targets"""
+        """
+        Calls the tasks with the appropriate options for each of the targets.
+        """
         config_info = devpipeline_core.configinfo.ConfigInfo(self.executor)
         try:
             for target in build_order:
@@ -239,6 +261,8 @@ def make_command(tasks, *args, **kwargs):
 
     Arguments:
     tasks - the tasks to execute
+    args - extra arguments to pass to the TargetCommand constructor
+    kwargs - extra keyword arguments to pass to the TargetCommand constructor
     """
     command = TargetCommand(*args, **kwargs)
     command.enable_dependency_resolution()
@@ -249,8 +273,15 @@ def make_command(tasks, *args, **kwargs):
 
 def execute_command(command, args):
     """
-    Runs the provided command with the given args.  Exceptions are propogated
-    to the caller.
+    Runs the provided command with the given args.
+
+    Exceptions, if any, are propogated to the caller.
+
+    Arguments:
+    command - something that extends the Command class
+    args - A list of command line arguments.  If args is None, sys.argv
+           (without the first argument--assumed to be the command name) will
+           be used.
     """
     if args is None:
         args = sys.argv[1:]

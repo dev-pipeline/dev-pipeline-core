@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
-"""The main module for devpipeline"""
+"""
+Common functionality used by many dev-pipeline tooling.
+"""
 
 import devpipeline_core.plugin
 

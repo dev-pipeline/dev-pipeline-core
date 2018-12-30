@@ -85,12 +85,20 @@ def tool_builder(component, key, tool_map, *args):
 
 
 class _NullJoiner:
+    """A class to handle non-joinable values."""
+
     # pylint: disable=too-few-public-methods
     def __init__(self, component_name, key):
         self._component_name = component_name
         self._key = key
 
     def join(self, vals):
+        """
+        Either return the non-list value or raise an Exception.
+
+        Arguments:
+        vals - a list of values to process
+        """
         if len(vals) == 1:
             return vals[0]
         raise Exception(
@@ -99,8 +107,11 @@ class _NullJoiner:
 
 
 class ListSeparator:
+    """A class to that does nothing; it exists to provie a join method."""
+
     # pylint: disable=too-few-public-methods
     def join(self, vals):
+        """Return vals without mofication."""
         # pylint: disable=no-self-use
         return vals
 
@@ -120,7 +131,9 @@ def args_builder(prefix, current_target, args_dict, value_found_fn):
     current_target -- Information about the current target being processed.
     args_dict -- Something that acts like a dictionary.  The keys should be
                  options to deal with and the value should be the separtor
-                 value the option requires.
+                 value the option requires.  The separator can be any type
+                 that has a join method, or None if lists are supported for
+                 that key.
     value_found_fn -- A function to call when a match is found.
     """
     current_config = current_target.config
