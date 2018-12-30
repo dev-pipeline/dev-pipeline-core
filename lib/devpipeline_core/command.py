@@ -172,9 +172,9 @@ class TargetCommand(Command):
         parsed_args = self.parser.parse_args(*args, **kwargs)
 
         def _check_special_options():
-            for option, fn in self._special_options.items():
+            for option, option_fn in self._special_options.items():
                 if option in parsed_args:
-                    fn()
+                    option_fn()
                     return True
             return False
 
