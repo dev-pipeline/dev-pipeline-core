@@ -95,11 +95,17 @@ class Command(object):
         pass
 
 
+def _setup_targets(parsed_args, components):
+    if "targets" in parsed_args:
+        return parsed_args.targets
+    parsed_args.dependencies = "deep"
+    return components.keys()
+
+
 class TargetCommand(Command):
 
     """
-    A devpipeline command that executes a list of tasks against a list of
-    targets.
+    A devpipeline command that operates against a list of targets.
     """
 
     def __init__(self, config_fn, *args, **kwargs):
@@ -110,22 +116,47 @@ class TargetCommand(Command):
             default=argparse.SUPPRESS,
             help="The targets to operate on",
         )
-        self.executor = None
         self.components = None
         self.targets = None
-        self.verbosity = False
-        self.resolver = None
-        self.tasks = None
         self._config_fn = config_fn
+
+    def execute(self, *args, **kwargs):
+        parsed_args = self.parser.parse_args(*args, **kwargs)
+        self.components = self._config_fn()
+        self.targets = _setup_targets(parsed_args, self.components)
+        self.setup(parsed_args)
+        self.process()
+
+
+def _get_executor(parsed_args):
+    helper_fn = devpipeline_core.EXECUTOR_TYPES.get(parsed_args.executor)
+    if helper_fn:
+        return helper_fn[0]()
+    else:
+        raise Exception("{} isn't a valid executor".format(parsed_args.executor))
+
+
+def _get_resolver(parsed_args):
+    if "dependencies" not in parsed_args:
+        parsed_args.dependencies = "deep"
+    resolver = devpipeline_core.DEPENDENCY_RESOLVERS.get(parsed_args.dependencies)
+    if resolver:
+        return resolver[0]
+    else:
+        raise Exception("{} isn't a valid resolver".format(parsed_args.dependencies))
+
+
+class TaskCommand(TargetCommand):
+    """
+    A devpipeline command that executes a list of tasks against a list of
+    targets.
+    """
+    def __init__(self, config_fn, tasks, *args, **kwargs):
+        super().__init__(config_fn=config_fn, *args, **kwargs)
+        self._tasks = tasks
         self._special_options = {}
 
-    def enable_dependency_resolution(self):
-        """
-        Enable customizable dependency resolution for this Command.
-
-        This will add the --dependencies and --list-dependency-resolvers
-        command line arguments.
-        """
+        # Dependency resolution
         self.add_argument(
             "--dependencies",
             help="Control how build dependencies are handled.",
@@ -139,13 +170,7 @@ class TargetCommand(Command):
         )
         self._special_options["list_dependency_resolvers"] = _print_resolvers
 
-    def enable_executors(self):
-        """
-        Enable customizable executors for this Command.
-
-        This will add the --executor and --list-executors command line
-        arguments.
-        """
+        # Executor stuff
         self.add_argument(
             "--executor", help="The method to execute commands.", default="quiet"
         )
@@ -158,67 +183,29 @@ class TargetCommand(Command):
         self.verbosity = True
         self._special_options["list_executors"] = _print_executors
 
-    def set_tasks(self, tasks):
-        """
-        Set the TargetCommand's tasks.
-
-        Arguments:
-        tasks - The tasks to execute.  This should be a list of functions that
-                take a target configuration.
-        """
-        self.tasks = tasks
-
     def execute(self, *args, **kwargs):
         parsed_args = self.parser.parse_args(*args, **kwargs)
 
         def _check_special_options():
             for option, option_fn in self._special_options.items():
                 if option in parsed_args:
-                    option_fn()
-                    return True
-            return False
-
-        def _setup_targets():
-            if "targets" in parsed_args:
-                self.targets = parsed_args.targets
-            else:
-                parsed_args.dependencies = "deep"
-                self.targets = self.components.keys()
-
-        def _get_executor():
-            if self.verbosity:
-                helper_fn = devpipeline_core.EXECUTOR_TYPES.get(parsed_args.executor)
-                if helper_fn:
-                    return helper_fn[0]()
-                else:
-                    raise Exception(
-                        "{} isn't a valid executor".format(parsed_args.executor)
-                    )
+                    return option_fn
             return None
 
-        def _get_resolver():
-            if "dependencies" not in parsed_args:
-                parsed_args.dependencies = "deep"
-            resolver = devpipeline_core.DEPENDENCY_RESOLVERS.get(
-                parsed_args.dependencies
-            )
-            if resolver:
-                return resolver[0]
-            else:
-                raise Exception(
-                    "{} isn't a valid resolver".format(parsed_args.dependencies)
-                )
+        special_fn = _check_special_options()
+        if special_fn:
+            return special_fn()
+        self.components = self._config_fn()
+        self.targets = _setup_targets(parsed_args, self.components)
+        self.setup(parsed_args)
+        executor = _get_executor(parsed_args)
+        resolver = _get_resolver(parsed_args)
+        return self.process_targets(resolver, executor)
 
-        if not _check_special_options():
-            self.components = self._config_fn()
-            _setup_targets()
-            self.setup(parsed_args)
-            self.executor = _get_executor()
-            self.resolver = _get_resolver()
-            return self.process()
-        return None
-
-    def process(self):
+    def process_targets(self, resolver, executor):
+        """
+        Calls the tasks with the appropriate options for each of the targets.
+        """
         build_order = []
 
         def _listify(resolved_components):
@@ -226,14 +213,9 @@ class TargetCommand(Command):
 
             build_order += resolved_components
 
-        self.resolver(self.targets, self.components, _listify)
-        self.process_targets(build_order)
+        resolver(self.targets, self.components, _listify)
+        config_info = devpipeline_core.configinfo.ConfigInfo(executor)
 
-    def process_targets(self, build_order):
-        """
-        Calls the tasks with the appropriate options for each of the targets.
-        """
-        config_info = devpipeline_core.configinfo.ConfigInfo(self.executor)
         try:
             for target in build_order:
                 config_info.executor.message("  {}".format(target))
@@ -243,19 +225,19 @@ class TargetCommand(Command):
                 config_info.env = devpipeline_core.env.create_environment(
                     config_info.config
                 )
-                for task in self.tasks:
+                for task in self._tasks:
                     task(config_info)
-                self.executor.message("")
+                executor.message("")
         finally:
             self.components.write()
 
 
 def make_command(tasks, *args, **kwargs):
     """
-    Create a TargetCommand with defined tasks.
+    Create a TaskCommand with defined tasks.
 
     This is a helper function to avoid boiletplate when dealing with simple
-    cases (e.g., all cli arguments can be handled by TargetCommand), with no
+    cases (e.g., all cli arguments can be handled by TaskCommand), with no
     special processing.  In general, this means a command only needs to run
     established tasks.
 
@@ -264,10 +246,7 @@ def make_command(tasks, *args, **kwargs):
     args - extra arguments to pass to the TargetCommand constructor
     kwargs - extra keyword arguments to pass to the TargetCommand constructor
     """
-    command = TargetCommand(*args, **kwargs)
-    command.enable_dependency_resolution()
-    command.enable_executors()
-    command.set_tasks(tasks)
+    command = TaskCommand(tasks=tasks, *args, **kwargs)
     return command
 
 
