@@ -151,6 +151,7 @@ class TaskCommand(TargetCommand):
     A devpipeline command that executes a list of tasks against a list of
     targets.
     """
+
     def __init__(self, config_fn, tasks, *args, **kwargs):
         super().__init__(config_fn=config_fn, *args, **kwargs)
         self._tasks = tasks
