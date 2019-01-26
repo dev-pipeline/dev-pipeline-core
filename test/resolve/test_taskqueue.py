@@ -19,7 +19,9 @@ class TestDependencymanager(unittest.TestCase):
     def test_no_deps(self):
         components = ["foo", "bar"]
         tasks = ["checkout"]
-        dm = devpipeline_core.taskqueue.DependencyManager(components, tasks)
+        dm = devpipeline_core.taskqueue.DependencyManager(tasks)
+        dm.add_dependency((components[0], tasks[0]), None)
+        dm.add_dependency((components[1], tasks[0]), None)
         resolved_tasks = self._resolve_helper(dm, components, tasks)
         expected_tasks = [("foo", "checkout"), ("bar", "checkout")].sort()
         self.assertEqual(resolved_tasks.sort(), expected_tasks)
@@ -27,7 +29,8 @@ class TestDependencymanager(unittest.TestCase):
     def test_implicit_deps(self):
         components = ["foo"]
         tasks = ["checkout", "build", "test", "install"]
-        dm = devpipeline_core.taskqueue.DependencyManager(components, tasks)
+        dm = devpipeline_core.taskqueue.DependencyManager(tasks)
+        dm.add_dependency((components[0], tasks[0]), None)
         resolved_tasks = self._resolve_helper(dm, components, tasks)
         expected_tasks = [
             ("foo", "checkout"),
@@ -40,7 +43,7 @@ class TestDependencymanager(unittest.TestCase):
     def test_explicit_deps(self):
         components = ["foo", "bar"]
         tasks = ["build"]
-        dm = devpipeline_core.taskqueue.DependencyManager(components, tasks)
+        dm = devpipeline_core.taskqueue.DependencyManager(tasks)
         dm.add_dependency(("bar", "build"), ("foo", "build"))
         resolved_tasks = self._resolve_helper(dm, components, tasks)
         expected_tasks = [("foo", "build"), ("bar", "build")]

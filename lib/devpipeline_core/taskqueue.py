@@ -26,13 +26,16 @@ class _TaskQueue:
 
 
 class DependencyManager:
-    def __init__(self, components, tasks):
+    def __init__(self, tasks):
+        self._tasks = tasks.copy()
         self._dependencies = {}
         self._reverse_dependencies = {}
 
-        for component in components:
+    def _validate_implicit_dependencies(self, component):
+        task_tuple = (component, self._tasks[0])
+        if task_tuple not in self._dependencies:
             last_task = None
-            for task in tasks:
+            for task in self._tasks:
                 task_tuple = (component, task)
                 if last_task:
                     last_task_tuple = (component, last_task)
@@ -47,8 +50,11 @@ class DependencyManager:
         def _helper(key, value, table):
             table[key][value] = None
 
-        _helper(component_task, dependent_task, self._dependencies)
-        _helper(dependent_task, component_task, self._reverse_dependencies)
+        self._validate_implicit_dependencies(component_task[0])
+        if dependent_task:
+            self._validate_implicit_dependencies(dependent_task[0])
+            _helper(component_task, dependent_task, self._dependencies)
+            _helper(dependent_task, component_task, self._reverse_dependencies)
 
     def get_queue(self):
         return _TaskQueue(self._dependencies.copy(), self._reverse_dependencies.copy())
