@@ -42,6 +42,28 @@ _NONE_RESOLVER = (
 )
 
 
+def _add_component_dependencies(component_task, dependencies, dm):
+    component_dependencies = []
+    if dependencies:
+        for dependency in dependencies:
+            dm.add_dependency(component_task, (dependency, component_task[1]))
+            component_dependencies.append(dependency)
+    else:
+        dm.add_dependency(component_task, None)
+    return component_dependencies
+
+
+def _handle_component_dependencies(tasks, component, dm):
+    component_dependencies = []
+    for task in tasks:
+        component_task = (component.name, task)
+        dependencies = component.get_list("depends.{}".format(task))
+        component_dependencies.extend(
+            _add_component_dependencies(component_task, dependencies, dm)
+        )
+    return component_dependencies
+
+
 def calculate_dependencies(targets, full_config, tasks):
     dm = devpipeline_core.taskqueue.DependencyManager(tasks)
     to_process = list(targets)
@@ -51,17 +73,13 @@ def calculate_dependencies(targets, full_config, tasks):
         target = to_process[0]
         component = full_config.get(target)
         if component:
-            for task in tasks:
-                component_task = (component.name, task)
-                dependencies = component.get_list("depends.{}".format(task))
-                if dependencies:
-                    for dependency in dependencies:
-                        dm.add_dependency(component_task, (dependency, task))
-                        if dependency not in known_targets:
-                            known_targets[dependency] = None
-                            to_process.append(dependency)
-                else:
-                    dm.add_dependency(component_task, None)
+            component_dependencies = _handle_component_dependencies(
+                tasks, component, dm
+            )
+            for dependency in component_dependencies:
+                if dependency not in known_targets:
+                    known_targets[dependency] = None
+                    to_process.append(dependency)
         else:
             missing_components.append(target)
         to_process.pop(0)
