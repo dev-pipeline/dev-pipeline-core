@@ -95,11 +95,23 @@ class TestStandardResolver(unittest.TestCase):
         )
         _test_order(self, ["a.build", "b.build", "c.build"], order)
 
+    def test_missing_component(self):
+        configuration = mockconfig.MockConfig({})
+
+        def _run_fn():
+            devpipeline_core.resolve.calculate_dependencies(
+                ["foo"], configuration, ["build"]
+            )
+
+        self.assertRaises(devpipeline_core.resolve.MissingComponentsException, _run_fn)
+
     def test_circular_deps(self):
         configuration = mockconfig.MockConfig({"b": {"depends": "b"}})
 
         def _run_fn():
-            devpipeline_core.resolve.order_dependencies(["b"], configuration)
+            devpipeline_core.resolve.calculate_dependencies(
+                ["b"], configuration, ["build"]
+            )
 
         self.assertRaises(devpipeline_core.resolve.CircularDependencyException, _run_fn)
 

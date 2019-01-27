@@ -17,6 +17,15 @@ class CircularDependencyException(Exception):
         return "Circular dependency: {}".format(self.components)
 
 
+class MissingComponentsException(Exception):
+    def __init__(self, missing_components):
+        super().__init__()
+        self.missing_components = missing_components
+
+    def __str__(self):
+        return "Missing component configurations: {}".format(self.missing_components)
+
+
 def _process_none(targets, components, tasks):
     del components
 
@@ -37,6 +46,7 @@ def calculate_dependencies(targets, full_config, tasks):
     dm = devpipeline_core.taskqueue.DependencyManager(tasks)
     to_process = list(targets)
     known_targets = {target: None for target in targets}
+    missing_components = []
     while to_process:
         target = to_process[0]
         component = full_config.get(target)
@@ -52,7 +62,12 @@ def calculate_dependencies(targets, full_config, tasks):
                             to_process.append(dependency)
                 else:
                     dm.add_dependency(component_task, None)
+        else:
+            missing_components.append(target)
         to_process.pop(0)
+
+    if missing_components:
+        raise MissingComponentsException(missing_components)
     return dm
 
 

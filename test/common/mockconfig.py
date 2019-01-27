@@ -44,7 +44,10 @@ class MockConfig:
 
     def get(self, component):
         """Get a specific component to operate on"""
-        return MockComponent(component, self._config[component])
+        config = self._config.get(component)
+        if config is not None:
+            return MockComponent(component, config)
+        return None
 
     def __iter__(self):
         return iter(self._config)
