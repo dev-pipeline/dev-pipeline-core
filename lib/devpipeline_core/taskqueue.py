@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 
+import copy
+
 
 class _TaskQueue:
     def __init__(self, dependencies, reverse_dependencies):
-        self._dependencies = dependencies
-        self._reverse_dependencies = reverse_dependencies
+        self._dependencies = copy.deepcopy(dependencies)
+        self._reverse_dependencies = copy.deepcopy(reverse_dependencies)
 
     def __iter__(self):
         while self._dependencies:
@@ -57,4 +59,4 @@ class DependencyManager:
             _helper(dependent_task, component_task, self._reverse_dependencies)
 
     def get_queue(self):
-        return _TaskQueue(self._dependencies.copy(), self._reverse_dependencies.copy())
+        return _TaskQueue(self._dependencies, self._reverse_dependencies)
