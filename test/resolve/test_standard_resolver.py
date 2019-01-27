@@ -11,6 +11,16 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "common"))
 import mockconfig
 
 
+def _order_resolve(dm):
+    order = []
+    task_queue = dm.get_queue()
+    for component_tasks in task_queue:
+        for component_task in component_tasks:
+            order.append("{}.{}".format(component_task[0], component_task[1]))
+            task_queue.resolve(component_task)
+    return order
+
+
 def _test_order(tester, expected_order, dependant_order):
     last_index = -1
     for component in expected_order:
@@ -22,46 +32,68 @@ def _test_order(tester, expected_order, dependant_order):
 class TestStandardResolver(unittest.TestCase):
     def test_single(self):
         configuration = mockconfig.MockConfig({"foo": {}})
-        order = devpipeline_core.resolve.order_dependencies(["foo"], configuration)
+        order = _order_resolve(
+            devpipeline_core.resolve.calculate_dependencies(
+                ["foo"], configuration, ["build"]
+            )
+        )
         self.assertEqual(1, len(order))
-        self.assertEqual(order[0], "foo")
+        self.assertEqual(order[0], "foo.build")
 
     def test_single_target(self):
         configuration = mockconfig.MockConfig({"foo": {}, "bar": {}})
-        order = devpipeline_core.resolve.order_dependencies(["foo"], configuration)
+        order = _order_resolve(
+            devpipeline_core.resolve.calculate_dependencies(
+                ["foo"], configuration, ["build"]
+            )
+        )
         self.assertEqual(1, len(order))
-        self.assertEqual(order[0], "foo")
+        self.assertEqual(order[0], "foo.build")
 
     def test_multiple(self):
         configuration = mockconfig.MockConfig({"foo": {}, "bar": {}})
-        order = devpipeline_core.resolve.order_dependencies(
-            ["foo", "bar"], configuration
+        order = _order_resolve(
+            devpipeline_core.resolve.calculate_dependencies(
+                ["foo", "bar"], configuration, ["build"]
+            )
         )
         self.assertEqual(2, len(order))
-        self.assertTrue("foo" in order)
-        self.assertTrue("bar" in order)
+        self.assertTrue("foo.build" in order)
+        self.assertTrue("bar.build" in order)
 
     def test_linear_deps(self):
         configuration = mockconfig.MockConfig(
-            {"a": {}, "b": {"depends": "a"}, "c": {"depends": "b"}}
+            {"a": {}, "b": {"depends.build": "a"}, "c": {"depends.build": "b"}}
         )
-        order = devpipeline_core.resolve.order_dependencies(["c"], configuration)
-        _test_order(self, ["a", "b", "c"], order)
+        order = _order_resolve(
+            devpipeline_core.resolve.calculate_dependencies(
+                ["c"], configuration, ["build"]
+            )
+        )
+        _test_order(self, ["a.build", "b.build", "c.build"], order)
 
     def test_common_deps(self):
         configuration = mockconfig.MockConfig(
-            {"a": {}, "b": {"depends": "a"}, "c": {"depends": "a"}}
+            {"a": {}, "b": {"depends.build": "a"}, "c": {"depends.build": "a"}}
         )
-        order = devpipeline_core.resolve.order_dependencies(["b", "c"], configuration)
-        _test_order(self, ["a", "b"], order)
-        _test_order(self, ["a", "c"], order)
+        order = _order_resolve(
+            devpipeline_core.resolve.calculate_dependencies(
+                ["b", "c"], configuration, ["build"]
+            )
+        )
+        _test_order(self, ["a.build", "b.build"], order)
+        _test_order(self, ["a.build", "c.build"], order)
 
     def test_multi_deps(self):
         configuration = mockconfig.MockConfig(
-            {"a": {}, "b": {"depends": "a"}, "c": {"depends": "a, b"}}
+            {"a": {}, "b": {"depends.build": "a"}, "c": {"depends.build": "a, b"}}
         )
-        order = devpipeline_core.resolve.order_dependencies(["c"], configuration)
-        _test_order(self, ["a", "b", "c"], order)
+        order = _order_resolve(
+            devpipeline_core.resolve.calculate_dependencies(
+                ["c"], configuration, ["build"]
+            )
+        )
+        _test_order(self, ["a.build", "b.build", "c.build"], order)
 
     def test_circular_deps(self):
         configuration = mockconfig.MockConfig({"b": {"depends": "b"}})

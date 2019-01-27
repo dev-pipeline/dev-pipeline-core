@@ -35,7 +35,7 @@ _NONE_RESOLVER = (
 
 def calculate_dependencies(targets, full_config, tasks):
     dm = devpipeline_core.taskqueue.DependencyManager(tasks)
-    to_process = targets.copy()
+    to_process = list(targets)
     known_targets = {target: None for target in targets}
     while to_process:
         target = to_process[0]
@@ -47,11 +47,11 @@ def calculate_dependencies(targets, full_config, tasks):
                 if dependencies:
                     for dependency in dependencies:
                         dm.add_dependency(component_task, (dependency, task))
+                        if dependency not in known_targets:
+                            known_targets[dependency] = None
+                            to_process.append(dependency)
                 else:
                     dm.add_dependency(component_task, None)
-            if component.name not in known_targets:
-                known_targets[component.name] = None
-                to_process.append(component.name)
         to_process.pop(0)
     return dm
 
@@ -63,7 +63,7 @@ _DEEP_RESOLVER = (
 
 
 def _process_reverse(targets, components, tasks):
-    to_process = targets.copy()
+    to_process = list(targets)
     known_targets = {target: None for target in targets}
     full_dm = calculate_dependencies(components.keys(), components, tasks)
     dm = devpipeline_core.taskqueue.DependencyManager(tasks)
