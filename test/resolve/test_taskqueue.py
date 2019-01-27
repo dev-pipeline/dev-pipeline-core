@@ -30,7 +30,7 @@ class TestDependencymanager(unittest.TestCase):
         components = ["foo"]
         tasks = ["checkout", "build", "test", "install"]
         dm = devpipeline_core.taskqueue.DependencyManager(tasks)
-        dm.add_dependency((components[0], tasks[0]), None)
+        dm.add_dependency((components[0], tasks[3]), None)
         resolved_tasks = self._resolve_helper(dm, components, tasks)
         expected_tasks = [
             ("foo", "checkout"),
@@ -38,6 +38,15 @@ class TestDependencymanager(unittest.TestCase):
             ("foo", "test"),
             ("foo", "install"),
         ]
+        self.assertEqual(resolved_tasks, expected_tasks)
+
+    def test_partial_implicit_deps(self):
+        components = ["foo"]
+        tasks = ["checkout", "build", "test", "install"]
+        dm = devpipeline_core.taskqueue.DependencyManager(tasks)
+        dm.add_dependency((components[0], tasks[1]), None)
+        resolved_tasks = self._resolve_helper(dm, components, tasks)
+        expected_tasks = [("foo", "checkout"), ("foo", "build")]
         self.assertEqual(resolved_tasks, expected_tasks)
 
     def test_explicit_deps(self):

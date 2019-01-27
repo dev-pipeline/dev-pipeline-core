@@ -27,26 +27,43 @@ class _TaskQueue:
             del self._dependencies[reverse][task]
 
 
+def _add_implicit(last_task, task_tuple, dependencies, reverse_dependencies):
+    if last_task:
+        last_task_tuple = (task_tuple[0], last_task)
+        dependencies[task_tuple] = {last_task_tuple: None}
+        if last_task_tuple not in reverse_dependencies:
+            reverse_dependencies[last_task_tuple] = {task_tuple: None}
+        else:
+            reverse_dependencies[last_task_tuple][task_tuple] = None
+    else:
+        dependencies[task_tuple] = {}
+    reverse_dependencies[task_tuple] = {}
+
+
+def _fill_implicit(component_task, task_list, dependencies, reverse_dependencies):
+    last_task = None
+    task_index = task_list.index(component_task[1]) + 1
+    for task in task_list[0:task_index]:
+        task_tuple = (component_task[0], task)
+        if task_tuple not in dependencies:
+            _add_implicit(last_task, task_tuple, dependencies, reverse_dependencies)
+        last_task = task
+
+
 class DependencyManager:
     def __init__(self, tasks):
         self._tasks = tasks.copy()
         self._dependencies = {}
         self._reverse_dependencies = {}
 
-    def _validate_implicit_dependencies(self, component):
-        task_tuple = (component, self._tasks[0])
-        if task_tuple not in self._dependencies:
-            last_task = None
-            for task in self._tasks:
-                task_tuple = (component, task)
-                if last_task:
-                    last_task_tuple = (component, last_task)
-                    self._dependencies[task_tuple] = {last_task_tuple: None}
-                    self._reverse_dependencies[last_task_tuple] = {task_tuple: None}
-                else:
-                    self._dependencies[task_tuple] = {}
-                self._reverse_dependencies[task_tuple] = {}
-                last_task = task
+    def _validate_implicit_dependencies(self, component_task):
+        if component_task not in self._dependencies:
+            _fill_implicit(
+                component_task,
+                self._tasks,
+                self._dependencies,
+                self._reverse_dependencies,
+            )
 
     def get_dependencies(self, component_task):
         return self._dependencies.get(component_task).keys()
@@ -58,9 +75,9 @@ class DependencyManager:
         def _helper(key, value, table):
             table[key][value] = None
 
-        self._validate_implicit_dependencies(component_task[0])
+        self._validate_implicit_dependencies(component_task)
         if dependent_task:
-            self._validate_implicit_dependencies(dependent_task[0])
+            self._validate_implicit_dependencies(dependent_task)
             _helper(component_task, dependent_task, self._dependencies)
             _helper(dependent_task, component_task, self._reverse_dependencies)
 

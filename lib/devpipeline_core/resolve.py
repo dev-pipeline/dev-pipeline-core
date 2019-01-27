@@ -57,6 +57,7 @@ def _handle_component_dependencies(tasks, component, dm):
     component_dependencies = []
     for task in tasks:
         component_task = (component.name, task)
+        dm.add_dependency(component_task, None)
         dependencies = component.get_list("depends.{}".format(task))
         component_dependencies.extend(
             _add_component_dependencies(component_task, dependencies, dm)

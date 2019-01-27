@@ -95,6 +95,17 @@ class TestStandardResolver(unittest.TestCase):
         )
         _test_order(self, ["a.build", "b.build", "c.build"], order)
 
+    def test_complex_deps(self):
+        configuration = mockconfig.MockConfig(
+            {"a": {}, "b": {"depends.build": "a"}, "c": {"depends.checkout": "b"}}
+        )
+        order = _order_resolve(
+            devpipeline_core.resolve.calculate_dependencies(
+                ["c"], configuration, ["checkout", "build"]
+            )
+        )
+        _test_order(self, ["b.checkout", "c.checkout", "c.build"], order)
+
     def test_missing_component(self):
         configuration = mockconfig.MockConfig({})
 
