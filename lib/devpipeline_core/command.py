@@ -154,8 +154,13 @@ class TaskCommand(TargetCommand):
 
     def __init__(self, config_fn, tasks, *args, **kwargs):
         super().__init__(config_fn=config_fn, *args, **kwargs)
-        self._tasks = tasks
+        self._tasks = {}
+        self._task_order = []
         self._special_options = {}
+
+        for name, fn in tasks:
+            self._tasks[name] = fn
+            self._task_order.append(name)
 
         # Dependency resolution
         self.add_argument(
@@ -207,28 +212,26 @@ class TaskCommand(TargetCommand):
         """
         Calls the tasks with the appropriate options for each of the targets.
         """
-        build_order = []
-
-        def _listify(resolved_components):
-            nonlocal build_order
-
-            build_order += resolved_components
-
-        resolver(self.targets, self.components, _listify)
+        dm = resolver(self.targets, self.components, self._task_order)
+        task_queue = dm.get_queue()
         config_info = devpipeline_core.configinfo.ConfigInfo(executor)
 
         try:
-            for target in build_order:
-                config_info.executor.message("  {}".format(target))
-                config_info.executor.message("-" * (4 + len(target)))
+            for component_tasks in task_queue:
+                for component_task in component_tasks:
+                    task_heading = "  {} ({})".format(
+                        component_task[0], component_task[1]
+                    )
+                    config_info.executor.message(task_heading)
+                    config_info.executor.message("-" * (2 + len(task_heading)))
 
-                config_info.config = self.components.get(target)
-                config_info.env = devpipeline_core.env.create_environment(
-                    config_info.config
-                )
-                for task in self._tasks:
-                    task(config_info)
-                executor.message("")
+                    config_info.config = self.components.get(component_task[0])
+                    config_info.env = devpipeline_core.env.create_environment(
+                        config_info.config
+                    )
+                    self._tasks[component_task[1]](config_info)
+                    executor.message("")
+                    task_queue.resolve(component_task)
         finally:
             self.components.write()
 

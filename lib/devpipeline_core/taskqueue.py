@@ -51,6 +51,9 @@ class DependencyManager:
     def get_dependencies(self, component_task):
         return self._dependencies.get(component_task).keys()
 
+    def get_reverse_dependencies(self, component_task):
+        return self._reverse_dependencies.get(component_task).keys()
+
     def add_dependency(self, component_task, dependent_task):
         def _helper(key, value, table):
             table[key][value] = None
