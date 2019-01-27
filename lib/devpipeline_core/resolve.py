@@ -42,47 +42,56 @@ _NONE_RESOLVER = (
 )
 
 
+def _build_target_tasks(targets, tasks):
+    target_tasks = []
+    known_target_tasks = {}
+    for target in targets:
+        for task in tasks:
+            target_task = (target, task)
+            target_tasks.append(target_task)
+            known_target_tasks[target_task] = None
+    return (target_tasks, known_target_tasks)
+
+
 def _add_component_dependencies(component_task, dependencies, dm):
     component_dependencies = []
     if dependencies:
         for dependency in dependencies:
-            dm.add_dependency(component_task, (dependency, component_task[1]))
-            component_dependencies.append(dependency)
+            dependent_task = (dependency, component_task[1])
+            dm.add_dependency(component_task, dependent_task)
+            component_dependencies.append(dependent_task)
     else:
         dm.add_dependency(component_task, None)
     return component_dependencies
 
 
-def _handle_component_dependencies(tasks, component, dm):
+def _handle_component_dependencies(component, component_task, dm):
     component_dependencies = []
-    for task in tasks:
-        component_task = (component.name, task)
-        dm.add_dependency(component_task, None)
-        dependencies = component.get_list("depends.{}".format(task))
-        component_dependencies.extend(
-            _add_component_dependencies(component_task, dependencies, dm)
-        )
+    dm.add_dependency(component_task, None)
+    dependencies = component.get_list("depends.{}".format(component_task[1]))
+    component_dependencies.extend(
+        _add_component_dependencies(component_task, dependencies, dm)
+    )
     return component_dependencies
 
 
 def calculate_dependencies(targets, full_config, tasks):
     dm = devpipeline_core.taskqueue.DependencyManager(tasks)
-    to_process = list(targets)
-    known_targets = {target: None for target in targets}
+    to_process, known_targets = _build_target_tasks(targets, tasks)
     missing_components = []
     while to_process:
-        target = to_process[0]
-        component = full_config.get(target)
+        target_task = to_process[0]
+        component = full_config.get(target_task[0])
         if component:
             component_dependencies = _handle_component_dependencies(
-                tasks, component, dm
+                component, target_task, dm
             )
             for dependency in component_dependencies:
                 if dependency not in known_targets:
                     known_targets[dependency] = None
                     to_process.append(dependency)
         else:
-            missing_components.append(target)
+            missing_components.append(target_task[0])
         to_process.pop(0)
 
     if missing_components:
