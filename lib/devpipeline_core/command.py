@@ -74,20 +74,9 @@ class Command(object):
             self.process()
         """
         args = self.parser.parse_args(*args, **kwargs)
-        self.setup(args)
-        self.process()
+        self.process(args)
 
-    def setup(self, arguments):
-        """
-        Configure the command.  Subclasses should override this function if
-        they need to change behavior based on the command line arguments.
-
-        Arguments:
-        arguments - result of argparse.ArgumentParser.parse_args
-        """
-        pass
-
-    def process(self):
+    def process(self, arguments):
         """
         Execute the command.  Subclasses are expected to override this
         function.
@@ -116,16 +105,19 @@ class TargetCommand(Command):
             default=argparse.SUPPRESS,
             help="The targets to operate on",
         )
-        self.components = None
-        self.targets = None
         self._config_fn = config_fn
+
+    def process(self, arguments):
+        components = self._config_fn()
+        targets = _setup_targets(arguments, components)
+        self.process_targets(targets, components, arguments)
 
     def execute(self, *args, **kwargs):
         parsed_args = self.parser.parse_args(*args, **kwargs)
-        self.components = self._config_fn()
-        self.targets = _setup_targets(parsed_args, self.components)
-        self.setup(parsed_args)
-        self.process()
+        self.process(parsed_args)
+
+    def process_targets(self, targets, full_config, arguments):
+        pass
 
 
 def _get_executor(parsed_args):
@@ -201,18 +193,15 @@ class TaskCommand(TargetCommand):
         special_fn = _check_special_options()
         if special_fn:
             return special_fn()
-        self.components = self._config_fn()
-        self.targets = _setup_targets(parsed_args, self.components)
-        self.setup(parsed_args)
-        executor = _get_executor(parsed_args)
-        resolver = _get_resolver(parsed_args)
-        return self.process_targets(resolver, executor)
+        self.process(parsed_args)
 
-    def process_targets(self, resolver, executor):
+    def process_targets(self, targets, full_config, arguments):
         """
         Calls the tasks with the appropriate options for each of the targets.
         """
-        dm = resolver(self.targets, self.components, self._task_order)
+        executor = _get_executor(arguments)
+        resolver = _get_resolver(arguments)
+        dm = resolver(targets, full_config, self._task_order)
         task_queue = dm.get_queue()
         config_info = devpipeline_core.configinfo.ConfigInfo(executor)
 
@@ -225,7 +214,7 @@ class TaskCommand(TargetCommand):
                     config_info.executor.message(task_heading)
                     config_info.executor.message("-" * (2 + len(task_heading)))
 
-                    config_info.config = self.components.get(component_task[0])
+                    config_info.config = full_config.get(component_task[0])
                     config_info.env = devpipeline_core.env.create_environment(
                         config_info.config
                     )
@@ -233,7 +222,7 @@ class TaskCommand(TargetCommand):
                     executor.message("")
                     task_queue.resolve(component_task)
         finally:
-            self.components.write()
+            full_config.write()
 
 
 def make_command(tasks, *args, **kwargs):
