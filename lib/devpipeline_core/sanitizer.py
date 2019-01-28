@@ -6,36 +6,53 @@ import re
 
 import devpipeline_core.plugin
 
+_DEPENDS_KEY_PATTERN = re.compile(r"^depends\..+")
+
+
+def _get_depends_keys(configuration):
+    return [key for key in configuration.keys() if _DEPENDS_KEY_PATTERN.match(key)]
+
 
 def _sanitize_empty_depends(configuration, error_fn):
     for name, component in configuration.items():
-        for dep in component.get_list("depends"):
-            if not dep:
-                error_fn("Empty dependency in {}".format(name))
+        depends_keys = _get_depends_keys(component)
+        for depends_key in depends_keys:
+            for dep in component.get_list(depends_key):
+                if not dep:
+                    error_fn("Empty dependency in {}:{}".format(name, depends_key))
 
 
 _IMPLICIT_PATTERN = re.compile(r"\$\{([a-z_\-0-9\.]+):.+\}")
 
 
-def _check_implicit_depends(component, dependencies, key, error_fn):
+def _check_implicit_depends(component, depends_keys, key, error_fn):
     val = component.get(key, raw=True)
     match = _IMPLICIT_PATTERN.search(val)
     if match:
         dep = match.group(1)
-        if dep not in dependencies:
-            error_fn(
-                "{}:{} has an implicit dependency on {}".format(
-                    component.name, key, dep
-                )
-            )
+        for depends_key in depends_keys:
+            if dep in component.get_list(depends_key):
+                return None
+        # not found in any of the depends keys
+        error_fn(
+            "{}:{} has an implicit dependency on {}".format(component.name, key, dep)
+        )
+    return None
 
 
 def _sanitize_implicit_depends(configuration, error_fn):
     for name, component in configuration.items():
         del name
-        component_deps = component.get_list("depends")
+        depends_keys = _get_depends_keys(component)
         for key in component:
-            _check_implicit_depends(component, component_deps, key, error_fn)
+            _check_implicit_depends(component, depends_keys, key, error_fn)
+
+
+def _sanitize_legacy_depends(configuration, error_fn):
+    for name, component in configuration.items():
+        if "depends" in component:
+            if not _get_depends_keys(component):
+                error_fn("{} uses a deprecated key (depends)".format(name))
 
 
 _SANITIZERS = devpipeline_core.plugin.query_plugins("devpipeline.config_sanitizers")

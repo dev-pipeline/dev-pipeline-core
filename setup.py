@@ -27,6 +27,7 @@ setup(
         "devpipeline.config_sanitizers": [
             "empty-depends = devpipeline_core.sanitizer:_sanitize_empty_depends",
             "implicit-depends = devpipeline_core.sanitizer:_sanitize_implicit_depends",
+            "legacy-depends = devpipeline_core.sanitizer:_sanitize_legacy_depends",
         ],
     },
     author="Stephen Newell",
