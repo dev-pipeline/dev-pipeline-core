@@ -138,6 +138,11 @@ def _get_resolver(parsed_args):
         raise Exception("{} isn't a valid resolver".format(parsed_args.dependencies))
 
 
+class _PartialFailureException(Exception):
+    def __init__(self, failed):
+        self.failed = failed
+
+
 class TaskCommand(TargetCommand):
     """
     A devpipeline command that executes a list of tasks against a list of
@@ -178,6 +183,12 @@ class TaskCommand(TargetCommand):
             default=argparse.SUPPRESS,
             help="List the available executors.",
         )
+
+        self.add_argument(
+            "--keep-going",
+            action="store_true",
+            help="If a task fails, continue executing as many remaining tasks as possible.",
+        )
         self.verbosity = True
         self._special_options["list_executors"] = _print_executors
 
@@ -206,6 +217,7 @@ class TaskCommand(TargetCommand):
         config_info = devpipeline_core.configinfo.ConfigInfo(executor)
 
         try:
+            failed = []
             for component_tasks in task_queue:
                 for component_task in component_tasks:
                     task_heading = "  {} ({})".format(
@@ -218,9 +230,18 @@ class TaskCommand(TargetCommand):
                     config_info.env = devpipeline_core.env.create_environment(
                         config_info.config
                     )
-                    self._tasks[component_task[1]](config_info)
+                    try:
+                        self._tasks[component_task[1]](config_info)
+                        task_queue.resolve(component_task)
+                    except Exception as e:
+                        if arguments.keep_going:
+                            skipped = task_queue.fail(component_task)
+                            failed.append((component_task, skipped, str(e)))
+                        else:
+                            raise e
                     executor.message("")
-                    task_queue.resolve(component_task)
+            if failed:
+                raise _PartialFailureException(failed)
         finally:
             full_config.write()
 
@@ -266,6 +287,13 @@ def execute_command(command, args):
             # (e.g., head).  Might be a better way to handle this, but for now
             # silently swallowing the error isn't terrible.
             pass
+
+    except _PartialFailureException as failed:
+        for failure, skipped, message in failed.failed:
+            print("\nTask {} failed".format(failure), file=sys.stderr)
+            print("\tError: {}".format(message), file=sys.stderr)
+            print("\tSkipped: {}".format(skipped), file=sys.stderr)
+        sys.exit(1)
 
     except Exception as failure:  # pylint: disable=broad-except
         print("Error: {}".format(str(failure)), file=sys.stderr)
