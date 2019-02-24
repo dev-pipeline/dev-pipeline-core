@@ -26,6 +26,19 @@ class _TaskQueue:
         for reverse in self._reverse_dependencies[task]:
             del self._dependencies[reverse][task]
 
+    def fail(self, task):
+        local_skipped = []
+        for dep in self._dependencies[task]:
+            del self._reverse_dependencies[dep][task]
+        for reverse in self._reverse_dependencies[task]:
+            local_skipped.append(reverse)
+        skipped = []
+        for skipped_task in local_skipped:
+            skipped.append(skipped_task)
+            skipped.extend(self.fail(skipped_task))
+        del self._dependencies[task]
+        return skipped
+
 
 def _add_implicit(last_task, task_tuple, dependencies, reverse_dependencies):
     if last_task:
