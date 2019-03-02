@@ -8,14 +8,16 @@ class _TaskQueue:
         self._dependencies = copy.deepcopy(dependencies)
         self._reverse_dependencies = copy.deepcopy(reverse_dependencies)
 
+    def _get_ready_tasks(self):
+        next_tasks = []
+        for component, dependencies in self._dependencies.items():
+            if not dependencies:
+                next_tasks.append(component)
+        return next_tasks
+
     def __iter__(self):
         while self._dependencies:
-            next_tasks = []
-
-            for component, dependencies in self._dependencies.items():
-                if not dependencies:
-                    next_tasks.append(component)
-
+            next_tasks = self._get_ready_tasks()
             if next_tasks:
                 yield next_tasks
             else:
