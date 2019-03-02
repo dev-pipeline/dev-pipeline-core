@@ -29,11 +29,11 @@ class MissingComponentsException(Exception):
 def _process_none(targets, components, tasks):
     del components
 
-    dm = devpipeline_core.taskqueue.DependencyManager(tasks)
+    dep_manager = devpipeline_core.taskqueue.DependencyManager(tasks)
     for target in targets:
         for task in tasks:
-            dm.add_dependency((target, task), None)
-    return dm
+            dep_manager.add_dependency((target, task), None)
+    return dep_manager
 
 
 _NONE_RESOLVER = (
@@ -53,30 +53,30 @@ def _build_target_tasks(targets, tasks):
     return (target_tasks, known_target_tasks)
 
 
-def _add_component_dependencies(component_task, dependencies, dm):
+def _add_component_dependencies(component_task, dependencies, dep_manager):
     component_dependencies = []
     if dependencies:
         for dependency in dependencies:
             dependent_task = (dependency, component_task[1])
-            dm.add_dependency(component_task, dependent_task)
+            dep_manager.add_dependency(component_task, dependent_task)
             component_dependencies.append(dependent_task)
     else:
-        dm.add_dependency(component_task, None)
+        dep_manager.add_dependency(component_task, None)
     return component_dependencies
 
 
-def _handle_component_dependencies(component, component_task, dm):
+def _handle_component_dependencies(component, component_task, dep_manager):
     component_dependencies = []
-    dm.add_dependency(component_task, None)
+    dep_manager.add_dependency(component_task, None)
     dependencies = component.get_list("depends.{}".format(component_task[1]))
     component_dependencies.extend(
-        _add_component_dependencies(component_task, dependencies, dm)
+        _add_component_dependencies(component_task, dependencies, dep_manager)
     )
     return component_dependencies
 
 
 def calculate_dependencies(targets, full_config, tasks):
-    dm = devpipeline_core.taskqueue.DependencyManager(tasks)
+    dep_manager = devpipeline_core.taskqueue.DependencyManager(tasks)
     to_process, known_targets = _build_target_tasks(targets, tasks)
     missing_components = []
     while to_process:
@@ -84,7 +84,7 @@ def calculate_dependencies(targets, full_config, tasks):
         component = full_config.get(target_task[0])
         if component:
             component_dependencies = _handle_component_dependencies(
-                component, target_task, dm
+                component, target_task, dep_manager
             )
             for dependency in component_dependencies:
                 if dependency not in known_targets:
@@ -96,7 +96,7 @@ def calculate_dependencies(targets, full_config, tasks):
 
     if missing_components:
         raise MissingComponentsException(missing_components)
-    return dm
+    return dep_manager
 
 
 _DEEP_RESOLVER = (
@@ -109,20 +109,20 @@ def _process_reverse(targets, components, tasks):
     to_process = list(targets)
     known_targets = {target: None for target in targets}
     full_dm = calculate_dependencies(components.keys(), components, tasks)
-    dm = devpipeline_core.taskqueue.DependencyManager(tasks)
+    dep_manager = devpipeline_core.taskqueue.DependencyManager(tasks)
     while to_process:
         target = to_process[0]
         for task in tasks:
             component_task = (target, task)
             if target in targets:
-                dm.add_dependency(component_task, None)
+                dep_manager.add_dependency(component_task, None)
             for reverse_dependent in full_dm.get_reverse_dependencies(component_task):
-                dm.add_dependency(reverse_dependent, component_task)
+                dep_manager.add_dependency(reverse_dependent, component_task)
                 if reverse_dependent[0] not in known_targets:
                     known_targets[reverse_dependent[0]] = None
                     to_process.append(reverse_dependent[0])
         to_process.pop(0)
-    return dm
+    return dep_manager
 
 
 _REVERSE_RESOLVER = (

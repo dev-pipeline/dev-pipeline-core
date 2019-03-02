@@ -29,7 +29,7 @@ def _print_executors():
         print("{} - {}".format(executor, devpipeline_core.EXECUTOR_TYPES[executor][1]))
 
 
-class Command(object):
+class Command:
 
     """This is the base class for dev-pipeline commands.
 
@@ -124,8 +124,7 @@ def _get_executor(parsed_args):
     helper_fn = devpipeline_core.EXECUTOR_TYPES.get(parsed_args.executor)
     if helper_fn:
         return helper_fn[0]()
-    else:
-        raise Exception("{} isn't a valid executor".format(parsed_args.executor))
+    raise Exception("{} isn't a valid executor".format(parsed_args.executor))
 
 
 def _get_resolver(parsed_args):
@@ -134,8 +133,7 @@ def _get_resolver(parsed_args):
     resolver = devpipeline_core.DEPENDENCY_RESOLVERS.get(parsed_args.dependencies)
     if resolver:
         return resolver[0]
-    else:
-        raise Exception("{} isn't a valid resolver".format(parsed_args.dependencies))
+    raise Exception("{} isn't a valid resolver".format(parsed_args.dependencies))
 
 
 class _PartialFailureException(Exception):
@@ -155,8 +153,8 @@ class TaskCommand(TargetCommand):
         self._task_order = []
         self._special_options = {}
 
-        for name, fn in tasks:
-            self._tasks[name] = fn
+        for name, task_fn in tasks:
+            self._tasks[name] = task_fn
             self._task_order.append(name)
 
         # Dependency resolution
@@ -212,8 +210,8 @@ class TaskCommand(TargetCommand):
         """
         executor = _get_executor(arguments)
         resolver = _get_resolver(arguments)
-        dm = resolver(targets, full_config, self._task_order)
-        task_queue = dm.get_queue()
+        dep_manager = resolver(targets, full_config, self._task_order)
+        task_queue = dep_manager.get_queue()
         config_info = devpipeline_core.configinfo.ConfigInfo(executor)
 
         try:
@@ -233,12 +231,12 @@ class TaskCommand(TargetCommand):
                     try:
                         self._tasks[component_task[1]](config_info)
                         task_queue.resolve(component_task)
-                    except Exception as e:
+                    except Exception as failure:  # pylint: disable=broad-except
                         if arguments.keep_going:
                             skipped = task_queue.fail(component_task)
-                            failed.append((component_task, skipped, str(e)))
+                            failed.append((component_task, skipped, str(failure)))
                         else:
-                            raise e
+                            raise failure
                     executor.message("")
             if failed:
                 raise _PartialFailureException(failed)

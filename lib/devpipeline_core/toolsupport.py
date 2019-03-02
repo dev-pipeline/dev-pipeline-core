@@ -76,12 +76,8 @@ def tool_builder(component, key, tool_map, *args):
         tool_fn = tool_map.get(tool_name)
         if tool_fn:
             return tool_fn[0](*args)
-        else:
-            raise Exception(
-                "Unknown {} '{}' for {}".format(key, tool_name, component.name)
-            )
-    else:
-        raise MissingToolKey(key, component)
+        raise Exception("Unknown {} '{}' for {}".format(key, tool_name, component.name))
+    raise MissingToolKey(key, component)
 
 
 class _NullJoiner:
@@ -169,6 +165,6 @@ def build_flex_args_keys(components):
     if len(components) > 1:
         sub_components = build_flex_args_keys(components[1:])
         return _prepend_first(components, sub_components)
-    elif len(components) == 1:
+    if len(components) == 1:
         return components[0]
     return []
