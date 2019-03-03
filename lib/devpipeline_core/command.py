@@ -204,6 +204,24 @@ class TaskCommand(TargetCommand):
             return special_fn()
         self.process(parsed_args)
 
+    def _execute_targets(self, task_queue, config_info, full_config, fail_function):
+        for component_tasks in task_queue:
+            for component_task in component_tasks:
+                task_heading = "  {} ({})".format(component_task[0], component_task[1])
+                config_info.executor.message(task_heading)
+                config_info.executor.message("-" * (2 + len(task_heading)))
+
+                config_info.config = full_config.get(component_task[0])
+                config_info.env = devpipeline_core.env.create_environment(
+                    config_info.config
+                )
+                try:
+                    self._tasks[component_task[1]](config_info)
+                    task_queue.resolve(component_task)
+                except Exception as failure:  # pylint: disable=broad-except
+                    fail_function(failure, component_task)
+                config_info.executor.message("")
+
     def process_targets(self, targets, full_config, arguments):
         """
         Calls the tasks with the appropriate options for each of the targets.
@@ -216,28 +234,20 @@ class TaskCommand(TargetCommand):
 
         try:
             failed = []
-            for component_tasks in task_queue:
-                for component_task in component_tasks:
-                    task_heading = "  {} ({})".format(
-                        component_task[0], component_task[1]
-                    )
-                    config_info.executor.message(task_heading)
-                    config_info.executor.message("-" * (2 + len(task_heading)))
 
-                    config_info.config = full_config.get(component_task[0])
-                    config_info.env = devpipeline_core.env.create_environment(
-                        config_info.config
-                    )
-                    try:
-                        self._tasks[component_task[1]](config_info)
-                        task_queue.resolve(component_task)
-                    except Exception as failure:  # pylint: disable=broad-except
-                        if arguments.keep_going:
-                            skipped = task_queue.fail(component_task)
-                            failed.append((component_task, skipped, str(failure)))
-                        else:
-                            raise failure
-                    executor.message("")
+            def _keep_going_on_failure(failure, task):
+                skipped = task_queue.fail(task)
+                failed.append((task, skipped, str(failure)))
+
+            def _fail_immediately(failure, task):
+                del task
+                raise failure
+
+            fail_fn = _fail_immediately
+            if arguments.keep_going:
+                fail_fn = _keep_going_on_failure
+
+            self._execute_targets(task_queue, config_info, full_config, fail_fn)
             if failed:
                 raise _PartialFailureException(failed)
         finally:
