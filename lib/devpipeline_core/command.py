@@ -5,8 +5,6 @@ Classes and functions releated to executing commands.
 """
 
 import argparse
-import errno
-import sys
 
 import devpipeline_core.configinfo
 import devpipeline_core.env
