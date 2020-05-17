@@ -13,6 +13,10 @@ setup(
     package_dir={"": "lib"},
     packages=find_packages("lib"),
     entry_points={
+        "devpipeline.drivers": [
+            "list-executors = devpipeline_core.cli_tools:_EXECUTORS_COMMAND",
+            "list-resolvers = devpipeline_core.cli_tools:_RESOLVERS_COMMAND",
+        ],
         "devpipeline.executors": [
             "dry-run = devpipeline_core.executor:_DRYRUN_EXECUTOR",
             "quiet = devpipeline_core.executor:_QUIET_EXECUTOR",

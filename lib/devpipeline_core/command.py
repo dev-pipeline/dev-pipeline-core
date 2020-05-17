@@ -12,21 +12,6 @@ import devpipeline_core.resolve
 import devpipeline_core.version
 
 
-def _print_resolvers():
-    for dependency_resolver in sorted(devpipeline_core.DEPENDENCY_RESOLVERS):
-        print(
-            "{} - {}".format(
-                dependency_resolver,
-                devpipeline_core.DEPENDENCY_RESOLVERS[dependency_resolver][1],
-            )
-        )
-
-
-def _print_executors():
-    for executor in sorted(devpipeline_core.EXECUTOR_TYPES):
-        print("{} - {}".format(executor, devpipeline_core.EXECUTOR_TYPES[executor][1]))
-
-
 def setup_target_parser(parser):
     parser.add_argument(
         "targets",
